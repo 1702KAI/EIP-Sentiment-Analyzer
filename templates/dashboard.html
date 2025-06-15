@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-chart-bar me-2"></i>Sentiment Analysis Dashboard</h1>
+                <div class="btn-group" role="group">
+                    <select class="form-select" id="jobSelect" onchange="loadJobData()">
+                        <option value="">Select Analysis Job...</option>
+                        {% for job in jobs %}
+                        <option value="{{ job.id }}" {% if selected_job_id == job.id %}selected{% endif %}>
+                            {{ job.original_filename }} ({{ job.created_at.strftime('%Y-%m-%d %H:%M') }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <a href="/upload" class="btn btn-primary ms-2">
+                        <i class="fas fa-upload me-1"></i>New Analysis
+                    </a>
+                    {% if sentiment_data %}
+                    <button class="btn btn-success ms-2" onclick="exportDashboardData()">
+                        <i class="fas fa-download me-1"></i>Export Data
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if sentiment_data %}
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ total_eips }}</h3>
+                    <p class="card-text">Total EIPs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ positive_sentiment }}</h3>
+                    <p class="card-text">Positive Sentiment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ neutral_sentiment }}</h3>
+                    <p class="card-text">Neutral Sentiment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ negative_sentiment }}</h3>
+                    <p class="card-text">Negative Sentiment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Sentiment Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="sentimentPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar me-2"></i>EIP Categories</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line me-2"></i>EIP Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-area me-2"></i>Sentiment Score Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="sentimentHistogram"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-table me-2"></i>EIP Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="eipTable">
+                            <thead>
+                                <tr>
+                                    <th>EIP</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Sentiment</th>
+                                    <th>Compound Score</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for eip in sentiment_data %}
+                                <tr>
+                                    <td><strong>{{ eip.eip }}</strong></td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 300px;" title="{{ eip.title or 'N/A' }}">
+                                            {{ eip.title or 'N/A' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if eip.category %}
+                                        <span class="badge bg-secondary">{{ eip.category }}</span>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if eip.status %}
+                                        <span class="badge 
+                                            {% if eip.status == 'Final' %}bg-success
+                                            {% elif eip.status == 'Draft' %}bg-warning
+                                            {% elif eip.status == 'Living' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ eip.status }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if eip.unified_compound is not none %}
+                                        {% if eip.unified_compound > 0.1 %}
+                                        <span class="badge bg-success">Positive</span>
+                                        {% elif eip.unified_compound < -0.1 %}
+                                        <span class="badge bg-danger">Negative</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Neutral</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if eip.unified_compound is not none %}
+                                        {{ "%.3f"|format(eip.unified_compound) }}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if eip.total_comment_count %}
+                                        {{ eip.total_comment_count }}
+                                        {% else %}
+                                        <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h4>No Analysis Data Available</h4>
+                    <p class="text-muted">Select a completed analysis job to view dashboard or upload a new CSV file to get started.</p>
+                    <a href="/upload" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i>Upload CSV File
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function loadJobData() {
+    const jobId = document.getElementById('jobSelect').value;
+    if (jobId) {
+        window.location.href = `/dashboard?job_id=${jobId}`;
+    } else {
+        window.location.href = '/dashboard';
+    }
+}
+
+{% if sentiment_data %}
+// Chart.js configuration
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'bottom'
+        }
+    }
+};
+
+// Sentiment Pie Chart
+const sentimentCtx = document.getElementById('sentimentPieChart').getContext('2d');
+new Chart(sentimentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Positive', 'Neutral', 'Negative'],
+        datasets: [{
+            data: [{{ positive_sentiment }}, {{ neutral_sentiment }}, {{ negative_sentiment }}],
+            backgroundColor: ['#198754', '#ffc107', '#dc3545'],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        ...chartOptions,
+        plugins: {
+            ...chartOptions.plugins,
+            title: {
+                display: true,
+                text: 'Overall Sentiment Distribution'
+            }
+        }
+    }
+});
+
+// Category Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ category_labels | safe }},
+        datasets: [{
+            label: 'Number of EIPs',
+            data: {{ category_counts | safe }},
+            backgroundColor: '#0d6efd',
+            borderColor: '#0a58ca',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ status_labels | safe }},
+        datasets: [{
+            label: 'Number of EIPs',
+            data: {{ status_counts | safe }},
+            backgroundColor: [
+                '#198754', // Final - green
+                '#ffc107', // Draft - yellow
+                '#0dcaf0', // Living - cyan
+                '#6c757d', // Others - gray
+                '#fd7e14', // Review - orange
+                '#dc3545'  // Withdrawn - red
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Sentiment Score Histogram
+const histogramCtx = document.getElementById('sentimentHistogram').getContext('2d');
+new Chart(histogramCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ sentiment_bins | safe }},
+        datasets: [{
+            label: 'Number of EIPs',
+            data: {{ sentiment_hist | safe }},
+            backgroundColor: '#17a2b8',
+            borderColor: '#138496',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Sentiment Score Range'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                },
+                title: {
+                    display: true,
+                    text: 'Number of EIPs'
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

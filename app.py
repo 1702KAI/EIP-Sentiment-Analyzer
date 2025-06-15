@@ -365,5 +365,90 @@ def results():
     completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
     return render_template('results.html', jobs=completed_jobs)
 
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard with sentiment analysis visualizations"""
+    # Get all completed jobs for selection
+    jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
+    
+    # Get selected job ID from query parameter
+    selected_job_id = request.args.get('job_id')
+    
+    # If no job selected, use the most recent one
+    if not selected_job_id and jobs:
+        selected_job_id = jobs[0].id
+    
+    sentiment_data = []
+    dashboard_stats = {}
+    
+    if selected_job_id:
+        # Get sentiment data for the selected job
+        sentiment_data = EIPSentiment.query.filter_by(job_id=selected_job_id).all()
+        
+        if sentiment_data:
+            # Calculate dashboard statistics
+            total_eips = len(sentiment_data)
+            
+            # Count sentiment categories
+            positive_sentiment = sum(1 for s in sentiment_data if s.unified_compound and s.unified_compound > 0.1)
+            negative_sentiment = sum(1 for s in sentiment_data if s.unified_compound and s.unified_compound < -0.1)
+            neutral_sentiment = total_eips - positive_sentiment - negative_sentiment
+            
+            # Category distribution
+            categories = {}
+            for s in sentiment_data:
+                cat = s.category or 'Unknown'
+                categories[cat] = categories.get(cat, 0) + 1
+            
+            category_labels = list(categories.keys())
+            category_counts = list(categories.values())
+            
+            # Status distribution
+            statuses = {}
+            for s in sentiment_data:
+                status = s.status or 'Unknown'
+                statuses[status] = statuses.get(status, 0) + 1
+            
+            status_labels = list(statuses.keys())
+            status_counts = list(statuses.values())
+            
+            # Sentiment score histogram
+            valid_scores = [s.unified_compound for s in sentiment_data if s.unified_compound is not None]
+            
+            if valid_scores:
+                import numpy as np
+                # Create bins for histogram
+                bins = np.linspace(-1, 1, 11)  # 10 bins from -1 to 1
+                hist, bin_edges = np.histogram(valid_scores, bins=bins)
+                
+                # Create bin labels
+                sentiment_bins = []
+                for i in range(len(bin_edges)-1):
+                    sentiment_bins.append(f"{bin_edges[i]:.1f} to {bin_edges[i+1]:.1f}")
+                
+                sentiment_hist = hist.tolist()
+            else:
+                sentiment_bins = []
+                sentiment_hist = []
+            
+            dashboard_stats = {
+                'total_eips': total_eips,
+                'positive_sentiment': positive_sentiment,
+                'negative_sentiment': negative_sentiment,
+                'neutral_sentiment': neutral_sentiment,
+                'category_labels': category_labels,
+                'category_counts': category_counts,
+                'status_labels': status_labels,
+                'status_counts': status_counts,
+                'sentiment_bins': sentiment_bins,
+                'sentiment_hist': sentiment_hist
+            }
+    
+    return render_template('dashboard.html', 
+                         jobs=jobs, 
+                         selected_job_id=selected_job_id,
+                         sentiment_data=sentiment_data,
+                         **dashboard_stats)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
