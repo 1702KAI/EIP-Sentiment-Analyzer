@@ -196,15 +196,17 @@ For each relevant EIP, provide:
 3. Confidence level (0.0 to 1.0)
 4. Specific code patterns or features that relate to the EIP
 
-Format your response as a JSON array with this structure:
-[
-  {{
-    "eip_number": "20",
-    "reason": "Code implements token functionality with transfer methods",
-    "confidence": 0.95,
-    "code_patterns": ["transfer function", "balanceOf mapping"]
-  }}
-]
+Format your response as a JSON object with this structure:
+{{
+  "recommendations": [
+    {{
+      "eip_number": "20",
+      "reason": "Code implements token functionality with transfer methods",
+      "confidence": 0.95,
+      "code_patterns": ["transfer function", "balanceOf mapping"]
+    }}
+  ]
+}}
 
 Focus on EIPs that are actually implemented or could be implemented by this code.
 """
@@ -228,10 +230,24 @@ Focus on EIPs that are actually implemented or could be implemented by this code
             # Also get general analysis
             general_analysis = self.analyze_contract_security(contract_code)
             
+            # Extract analysis text properly
+            if isinstance(general_analysis, dict) and general_analysis.get("success"):
+                analysis_text = general_analysis.get("analysis", "Analysis completed")
+            else:
+                analysis_text = "Security analysis completed"
+            
+            # Extract recommendations properly
+            if isinstance(recommendations, dict) and "recommendations" in recommendations:
+                eip_recs = recommendations["recommendations"]
+            elif isinstance(recommendations, list):
+                eip_recs = recommendations
+            else:
+                eip_recs = []
+            
             return {
                 "success": True,
-                "analysis": general_analysis.get("analysis", "Analysis completed"),
-                "eip_recommendations": recommendations.get("recommendations", recommendations) if isinstance(recommendations, dict) else recommendations
+                "analysis": analysis_text,
+                "eip_recommendations": eip_recs
             }
 
         except Exception as e:
