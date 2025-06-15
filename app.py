@@ -82,8 +82,8 @@ class EIPSentiment(db.Model):
     total_comment_count = db.Column(db.Integer)
     category = db.Column(db.String(100))
     status = db.Column(db.String(50))
-    title = db.Column(db.String(500))
-    author = db.Column(db.String(200))
+    title = db.Column(db.Text)
+    author = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     __table_args__ = (db.Index('idx_eip_job', 'eip', 'job_id'),)
@@ -160,6 +160,33 @@ def process_csv_background(job_id, filepath, output_dir):
             if final_file and os.path.exists(final_file):
                 try:
                     df = pd.read_csv(final_file)
+                    
+                    # Handle numeric fields with proper type conversion
+                    def safe_float(val):
+                        if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                            return None
+                        try:
+                            return float(val)
+                        except (ValueError, TypeError):
+                            return None
+                    
+                    def safe_int(val):
+                        if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                            return None
+                        try:
+                            return int(float(val))
+                        except (ValueError, TypeError):
+                            return None
+                    
+                    def safe_str(val):
+                        if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                            return None
+                        return str(val).strip()
+                    
+                    # Process in batches to avoid bulk insert issues
+                    batch_size = 100
+                    batch_count = 0
+                    
                     for _, row in df.iterrows():
                         # Skip rows with invalid or missing EIP values
                         eip_val = row.get('eip', '')
@@ -172,29 +199,6 @@ def process_csv_background(job_id, filepath, output_dir):
                         sentiment = EIPSentiment()
                         sentiment.job_id = job_id
                         sentiment.eip = str(eip_val).strip()
-                        
-                        # Handle numeric fields with proper type conversion
-                        def safe_float(val):
-                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
-                                return None
-                            try:
-                                return float(val)
-                            except (ValueError, TypeError):
-                                return None
-                        
-                        def safe_int(val):
-                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
-                                return None
-                            try:
-                                return int(float(val))
-                            except (ValueError, TypeError):
-                                return None
-                        
-                        def safe_str(val):
-                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
-                                return None
-                            return str(val).strip()
-                        
                         sentiment.unified_compound = safe_float(row.get('unified_compound'))
                         sentiment.unified_pos = safe_float(row.get('unified_pos'))
                         sentiment.unified_neg = safe_float(row.get('unified_neg'))
@@ -206,6 +210,25 @@ def process_csv_background(job_id, filepath, output_dir):
                         sentiment.author = safe_str(row.get('author'))
                         
                         db.session.add(sentiment)
+                        batch_count += 1
+                        
+                        # Commit in batches
+                        if batch_count >= batch_size:
+                            try:
+                                db.session.commit()
+                                batch_count = 0
+                            except Exception as batch_error:
+                                logging.warning(f"Batch commit error: {batch_error}")
+                                db.session.rollback()
+                                batch_count = 0
+                    
+                    # Commit any remaining records
+                    if batch_count > 0:
+                        try:
+                            db.session.commit()
+                        except Exception as final_error:
+                            logging.warning(f"Final batch commit error: {final_error}")
+                            db.session.rollback()
                 except Exception as e:
                     logging.warning(f"Could not save sentiment data: {e}")
             
