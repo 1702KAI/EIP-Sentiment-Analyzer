@@ -243,14 +243,13 @@ def upload_file():
         output_dir = os.path.join(app.config['OUTPUT_FOLDER'], job_id)
         os.makedirs(output_dir, exist_ok=True)
         
-        job = AnalysisJob(
-            id=job_id,
-            filename=unique_filename,
-            original_filename=file.filename,
-            status='queued',
-            progress=0,
-            stage='Queued for processing...'
-        )
+        job = AnalysisJob()
+        job.id = job_id
+        job.filename = unique_filename
+        job.original_filename = file.filename
+        job.status = 'queued'
+        job.progress = 0
+        job.stage = 'Queued for processing...'
         db.session.add(job)
         db.session.commit()
         
