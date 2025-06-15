@@ -618,6 +618,7 @@ def analyze_code_and_recommend():
         job_id = data.get('job_id')
         contract_code = data.get('contract_code')
         analysis_type = data.get('analysis_type', 'comprehensive')
+        eip_status_filter = data.get('eip_status_filter', 'final_only')
         
         if not contract_code:
             return jsonify({'success': False, 'error': 'Contract code is required'})
@@ -625,8 +626,17 @@ def analyze_code_and_recommend():
         if not job_id:
             return jsonify({'success': False, 'error': 'Job ID is required'})
         
-        # Get all EIP data from the selected job
-        eip_data_list = EIPSentiment.query.filter_by(job_id=job_id).all()
+        # Get EIP data based on status filter
+        query = EIPSentiment.query.filter_by(job_id=job_id)
+        
+        if eip_status_filter == 'final_only':
+            eip_data_list = query.filter(EIPSentiment.status == 'Final').all()
+        elif eip_status_filter == 'draft_living':
+            eip_data_list = query.filter(EIPSentiment.status.in_(['Draft', 'Living'])).all()
+        elif eip_status_filter == 'exclude_withdrawn':
+            eip_data_list = query.filter(EIPSentiment.status != 'Withdrawn').all()
+        else:  # all_statuses
+            eip_data_list = query.all()
         
         if not eip_data_list:
             return jsonify({'success': False, 'error': 'No EIP data found for the selected job'})
@@ -635,7 +645,7 @@ def analyze_code_and_recommend():
         generator = EIPCodeGenerator()
         
         # Analyze code and get EIP recommendations
-        result = generator.analyze_code_and_recommend_eips(contract_code, analysis_type, eip_data_list)
+        result = generator.analyze_code_and_recommend_eips(contract_code, analysis_type, eip_data_list, eip_status_filter)
         
         if not result['success']:
             return jsonify(result)

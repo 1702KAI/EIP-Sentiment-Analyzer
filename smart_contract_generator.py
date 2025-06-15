@@ -171,7 +171,7 @@ Format as complete JavaScript test files ready to run with Hardhat.
                 "error": f"Test generation failed: {str(e)}"
             }
 
-    def analyze_code_and_recommend_eips(self, contract_code, analysis_type, eip_data_list):
+    def analyze_code_and_recommend_eips(self, contract_code, analysis_type, eip_data_list, eip_status_filter='final_only'):
         """
         Analyze smart contract code and recommend relevant EIPs with sentiment warnings
         """
@@ -184,8 +184,9 @@ Analyze this Solidity smart contract code and identify which Ethereum Improvemen
 ```
 
 Analysis Focus: {analysis_type}
+Status Filter: {eip_status_filter}
 
-Based on the code patterns, functionality, and standards used, identify the top 5 most relevant EIPs from this list and explain why each is relevant:
+Based on the code patterns, functionality, and standards used, identify the top 10 most relevant EIPs from this list and explain why each is relevant:
 
 Available EIPs:
 {self._format_eip_list(eip_data_list)}
