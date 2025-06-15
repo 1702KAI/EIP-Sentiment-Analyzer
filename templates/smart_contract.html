@@ -639,6 +639,21 @@ function updateRecommendationsTab(recommendations) {
     container.innerHTML = html;
 }
 
+// Update status description based on filter selection
+function updateStatusInfo() {
+    const statusFilter = document.getElementById('eipStatusFilter').value;
+    const statusDescription = document.getElementById('statusDescription');
+    
+    const descriptions = {
+        'final_only': 'Final EIPs are stable and recommended for production use.',
+        'all_statuses': 'Includes all EIP statuses - use caution with non-Final statuses in production.',
+        'draft_living': 'Draft & Living EIPs are experimental and may change. Use with caution.',
+        'exclude_withdrawn': 'Shows all statuses except Withdrawn EIPs (which are obsolete).'
+    };
+    
+    statusDescription.textContent = descriptions[statusFilter] || descriptions['final_only'];
+}
+
 // Copy to clipboard function
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
