@@ -74,8 +74,11 @@
                 <div class="card-header">
                     <h5><i class="fas fa-chart-pie me-2"></i>Sentiment Distribution</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="height: 400px;">
                     <canvas id="sentimentPieChart"></canvas>
+                    <div id="sentimentPieError" class="text-center text-muted" style="display: none;">
+                        <p>Chart loading...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -247,8 +250,22 @@ function loadJobData() {
 }
 
 {% if sentiment_data %}
-// Chart.js configuration
-const chartOptions = {
+// Initialize charts when page is ready
+function initializeCharts() {
+    // Verify Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not available');
+        document.querySelectorAll('[id$="Error"]').forEach(el => {
+            el.style.display = 'block';
+            el.innerHTML = '<p class="text-danger">Chart library failed to load</p>';
+        });
+        return;
+    }
+
+    try {
+
+    // Chart.js configuration
+    const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -378,6 +395,9 @@ new Chart(histogramCtx, {
         }
     }
 });
+
+} // End initializeCharts function
+
 // Export dashboard data as CSV
 function exportDashboardData() {
     const jobId = document.getElementById('jobSelect').value;
