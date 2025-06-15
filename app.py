@@ -97,7 +97,6 @@ def allowed_file(filename):
 
 def process_csv_background(job_id, filepath, output_dir):
     """Background task to process CSV file through sentiment analysis pipeline"""
-    from models import AnalysisJob, OutputFile, EIPSentiment
     
     try:
         with app.app_context():
@@ -206,7 +205,6 @@ def upload_page():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    from models import AnalysisJob
     
     if 'file' not in request.files:
         flash('No file selected', 'error')
@@ -266,7 +264,6 @@ def upload_file():
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
-    from models import AnalysisJob, OutputFile
     
     job = AnalysisJob.query.get(job_id)
     if not job:
@@ -277,7 +274,6 @@ def job_status(job_id):
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
-    from models import AnalysisJob
     
     job = AnalysisJob.query.get(job_id)
     if not job:
@@ -294,7 +290,6 @@ def api_job_status(job_id):
 
 @app.route('/download/<job_id>/<filename>')
 def download_file(job_id, filename):
-    from models import AnalysisJob, OutputFile
     
     job = AnalysisJob.query.get(job_id)
     if not job:
@@ -310,7 +305,6 @@ def download_file(job_id, filename):
 
 @app.route('/results')
 def results():
-    from models import AnalysisJob
     
     # Show all completed jobs
     completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
