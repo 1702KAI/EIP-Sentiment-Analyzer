@@ -332,7 +332,7 @@ class SentimentAnalyzer:
                 # Clean up duplicate columns
                 columns_to_drop = [
                     'title_x', 'author_x', 'status_x',
-                    'status_conflict', 'status_y', '_id_y', 'deadline_x', 'requires_x',                            'discussion_x', 'toStatus', 'type_y', 'category', 'deadline_y',                                'discussion_y', 'requires_y', 'deadline_y', 'changeDate',  'changedDay',                       'changedMonth', 'changedYear', '__v_y', 'pr', 'category_x', 'category',                        '__v_x', 'category'
+                    'status_conflict', 'status_y', '_id_y', 'deadline_x', 'requires_x',                                                        'discussion_x', 'toStatus', 'type_y', 'category', 'deadline_y',                                                            'discussion_y', 'requires_y', 'deadline_y', 'changeDate',  'changedDay',                                                   'changedMonth', 'changedYear', '__v_y', 'pr', 'category_x', 'category',                                                    '__v_x', 'category'
                 ]
                 merged_df.drop(columns=[col for col in columns_to_drop if col in merged_df.columns], inplace=True)
             
