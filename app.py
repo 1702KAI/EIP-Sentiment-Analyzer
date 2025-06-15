@@ -610,5 +610,73 @@ def generate_tests():
         logging.error(f"Test generation error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/analyze-code-and-recommend', methods=['POST'])
+def analyze_code_and_recommend():
+    """Analyze smart contract code and recommend EIPs with sentiment warnings"""
+    try:
+        data = request.get_json()
+        job_id = data.get('job_id')
+        contract_code = data.get('contract_code')
+        analysis_type = data.get('analysis_type', 'comprehensive')
+        
+        if not contract_code:
+            return jsonify({'success': False, 'error': 'Contract code is required'})
+        
+        if not job_id:
+            return jsonify({'success': False, 'error': 'Job ID is required'})
+        
+        # Get all EIP data from the selected job
+        eip_data_list = EIPSentiment.query.filter_by(job_id=job_id).all()
+        
+        if not eip_data_list:
+            return jsonify({'success': False, 'error': 'No EIP data found for the selected job'})
+        
+        # Initialize code generator
+        generator = EIPCodeGenerator()
+        
+        # Analyze code and get EIP recommendations
+        result = generator.analyze_code_and_recommend_eips(contract_code, analysis_type, eip_data_list)
+        
+        if not result['success']:
+            return jsonify(result)
+        
+        # Process recommendations and add sentiment data
+        recommendations = []
+        eip_recommendations = result.get('eip_recommendations', [])
+        
+        for rec in eip_recommendations:
+            eip_number = str(rec.get('eip_number', ''))
+            
+            # Find matching EIP in database
+            eip_data = next((eip for eip in eip_data_list if str(eip.eip) == eip_number), None)
+            
+            if eip_data:
+                recommendation = {
+                    'eip_number': eip_number,
+                    'title': eip_data.title or 'Untitled',
+                    'status': eip_data.status or 'Unknown',
+                    'category': eip_data.category or 'Unknown',
+                    'author': eip_data.author or 'Unknown',
+                    'sentiment_score': eip_data.unified_compound or 0.0,
+                    'comment_count': eip_data.total_comment_count or 0,
+                    'reason': rec.get('reason', 'Relevant to your code'),
+                    'confidence': rec.get('confidence', 0.5),
+                    'code_patterns': rec.get('code_patterns', [])
+                }
+                recommendations.append(recommendation)
+        
+        # Sort by confidence and sentiment score
+        recommendations.sort(key=lambda x: (x['confidence'], x['sentiment_score']), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'analysis': result['analysis'],
+            'recommendations': recommendations[:10]  # Limit to top 10
+        })
+        
+    except Exception as e:
+        logging.error(f"Code analysis and recommendation error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -26,8 +26,29 @@
     </div>
 
     {% if sentiment_data %}
-    <!-- Contract Generation Form -->
+    <!-- Mode Selection -->
     <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="btn-group w-100" role="group" aria-label="Mode selection">
+                        <input type="radio" class="btn-check" name="mode" id="generateMode" checked>
+                        <label class="btn btn-outline-primary" for="generateMode" onclick="switchMode('generate')">
+                            <i class="fas fa-magic me-1"></i>Generate Contract
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="mode" id="analyzeMode">
+                        <label class="btn btn-outline-info" for="analyzeMode" onclick="switchMode('analyze')">
+                            <i class="fas fa-search me-1"></i>Analyze Existing Code
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Generation Form -->
+    <div class="row mb-4" id="generateSection">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
@@ -105,6 +126,45 @@
         </div>
     </div>
 
+    <!-- Code Analysis Section -->
+    <div class="row mb-4" id="analyzeSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-search me-2"></i>Analyze Smart Contract Code</h5>
+                </div>
+                <div class="card-body">
+                    <form id="analyzeForm">
+                        <div class="mb-3">
+                            <label for="codeInput" class="form-label">Paste Your Smart Contract Code</label>
+                            <textarea class="form-control" id="codeInput" rows="15" 
+                                      placeholder="// Paste your Solidity smart contract code here...
+pragma solidity ^0.8.0;
+
+contract MyContract {
+    // Your contract code
+}" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="analysisType" class="form-label">Analysis Focus</label>
+                            <select class="form-select" id="analysisType">
+                                <option value="comprehensive">Comprehensive Analysis</option>
+                                <option value="security">Security Focus</option>
+                                <option value="gas">Gas Optimization</option>
+                                <option value="standards">EIP Standards Compliance</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-search me-1"></i>Analyze Code & Get EIP Recommendations
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generated Content Tabs -->
     <div class="row" id="resultSection" style="display: none;">
         <div class="col-12">
@@ -124,6 +184,11 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab">
                                 <i class="fas fa-vial me-1"></i>Test Suite
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations" type="button" role="tab">
+                                <i class="fas fa-lightbulb me-1"></i>EIP Recommendations
                             </button>
                         </li>
                     </ul>
@@ -163,6 +228,22 @@
                                 </button>
                             </div>
                             <pre><code class="language-javascript" id="testCode">// Generated tests will appear here</code></pre>
+                        </div>
+                        
+                        <!-- EIP Recommendations Tab -->
+                        <div class="tab-pane fade" id="recommendations" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>EIP Recommendations & Sentiment Warnings</h6>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('recommendationsContent')">
+                                    <i class="fas fa-copy me-1"></i>Copy Report
+                                </button>
+                            </div>
+                            <div id="recommendationsContent">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    EIP recommendations will appear here after code analysis
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -204,6 +285,22 @@
 
 <script>
 let generatedContract = '';
+let currentMode = 'generate';
+
+function switchMode(mode) {
+    currentMode = mode;
+    
+    if (mode === 'generate') {
+        document.getElementById('generateSection').style.display = 'block';
+        document.getElementById('analyzeSection').style.display = 'none';
+    } else {
+        document.getElementById('generateSection').style.display = 'none';
+        document.getElementById('analyzeSection').style.display = 'block';
+    }
+    
+    // Hide results when switching modes
+    document.getElementById('resultSection').style.display = 'none';
+}
 
 function loadJobData() {
     const jobId = document.getElementById('jobSelect').value;
@@ -388,6 +485,132 @@ document.getElementById('testBtn')?.addEventListener('click', async function() {
         alert('Error: ' + error.message);
     }
 });
+
+// Handle analyze form submission
+document.getElementById('analyzeForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const codeInput = document.getElementById('codeInput').value;
+    const analysisType = document.getElementById('analysisType').value;
+    
+    if (!codeInput.trim()) {
+        alert('Please paste your smart contract code');
+        return;
+    }
+    
+    // Show loading modal
+    document.getElementById('loadingText').textContent = 'Analyzing code and finding EIP recommendations...';
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        const response = await fetch('/api/analyze-code-and-recommend', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                job_id: document.getElementById('jobSelect').value,
+                contract_code: codeInput,
+                analysis_type: analysisType
+            })
+        });
+        
+        const result = await response.json();
+        loadingModal.hide();
+        
+        if (result.success) {
+            // Update analysis tab
+            document.getElementById('analysisContent').innerHTML = '<pre>' + result.analysis + '</pre>';
+            
+            // Update recommendations tab
+            updateRecommendationsTab(result.recommendations);
+            
+            // Show result section
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // Switch to recommendations tab
+            const recommendationsTab = new bootstrap.Tab(document.getElementById('recommendations-tab'));
+            recommendationsTab.show();
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error analyzing code: ' + result.error);
+        }
+    } catch (error) {
+        loadingModal.hide();
+        alert('Error: ' + error.message);
+    }
+});
+
+function updateRecommendationsTab(recommendations) {
+    const container = document.getElementById('recommendationsContent');
+    
+    if (!recommendations || recommendations.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                No specific EIP recommendations found for this code.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="mb-4">';
+    
+    recommendations.forEach(rec => {
+        const sentimentClass = rec.sentiment_score < -0.1 ? 'danger' : 
+                             rec.sentiment_score > 0.1 ? 'success' : 'warning';
+        const sentimentIcon = rec.sentiment_score < -0.1 ? 'exclamation-triangle' : 
+                             rec.sentiment_score > 0.1 ? 'check-circle' : 'info-circle';
+        
+        html += `
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bookmark me-2"></i>EIP-${rec.eip_number}: ${rec.title}
+                    </h6>
+                    <span class="badge bg-${sentimentClass}">
+                        <i class="fas fa-${sentimentIcon} me-1"></i>
+                        Sentiment: ${rec.sentiment_score.toFixed(3)}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p><strong>Relevance:</strong> ${rec.reason}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge ${rec.status === 'Final' ? 'bg-success' : 
+                                                    rec.status === 'Draft' ? 'bg-warning' : 'bg-secondary'}">
+                                    ${rec.status}
+                                </span>
+                            </p>
+                            <p><strong>Category:</strong> ${rec.category}</p>
+                            ${rec.sentiment_score < -0.1 ? `
+                                <div class="alert alert-danger mt-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> This EIP has negative sentiment scores in community discussions. 
+                                    Consider reviewing implementation carefully or exploring alternatives.
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <strong>Author:</strong> ${rec.author || 'N/A'}<br>
+                                <strong>Comments:</strong> ${rec.comment_count || 0}<br>
+                                <strong>Confidence:</strong> ${(rec.confidence * 100).toFixed(1)}%
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
 
 // Copy to clipboard function
 function copyToClipboard(elementId) {

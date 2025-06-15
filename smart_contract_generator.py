@@ -170,3 +170,80 @@ Format as complete JavaScript test files ready to run with Hardhat.
                 "success": False,
                 "error": f"Test generation failed: {str(e)}"
             }
+
+    def analyze_code_and_recommend_eips(self, contract_code, analysis_type, eip_data_list):
+        """
+        Analyze smart contract code and recommend relevant EIPs with sentiment warnings
+        """
+        try:
+            analysis_prompt = f"""
+Analyze this Solidity smart contract code and identify which Ethereum Improvement Proposals (EIPs) are most relevant:
+
+```solidity
+{contract_code}
+```
+
+Analysis Focus: {analysis_type}
+
+Based on the code patterns, functionality, and standards used, identify the top 5 most relevant EIPs from this list and explain why each is relevant:
+
+Available EIPs:
+{self._format_eip_list(eip_data_list)}
+
+For each relevant EIP, provide:
+1. EIP number
+2. Brief explanation of why it's relevant to this code
+3. Confidence level (0.0 to 1.0)
+4. Specific code patterns or features that relate to the EIP
+
+Format your response as a JSON array with this structure:
+[
+  {{
+    "eip_number": "20",
+    "reason": "Code implements token functionality with transfer methods",
+    "confidence": 0.95,
+    "code_patterns": ["transfer function", "balanceOf mapping"]
+  }}
+]
+
+Focus on EIPs that are actually implemented or could be implemented by this code.
+"""
+
+            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+            # do not change this unless explicitly requested by the user
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": analysis_prompt}],
+                max_tokens=2000,
+                temperature=0.2,
+                response_format={"type": "json_object"}
+            )
+
+            import json
+            content = response.choices[0].message.content
+            if not content:
+                return {"success": False, "error": "Empty response from AI"}
+            recommendations = json.loads(content)
+            
+            # Also get general analysis
+            general_analysis = self.analyze_contract_security(contract_code)
+            
+            return {
+                "success": True,
+                "analysis": general_analysis.get("analysis", "Analysis completed"),
+                "eip_recommendations": recommendations.get("recommendations", recommendations) if isinstance(recommendations, dict) else recommendations
+            }
+
+        except Exception as e:
+            logging.error(f"Code analysis and EIP recommendation failed: {str(e)}")
+            return {
+                "success": False,
+                "error": f"Code analysis failed: {str(e)}"
+            }
+
+    def _format_eip_list(self, eip_data_list):
+        """Format EIP list for AI prompt"""
+        formatted = []
+        for eip in eip_data_list[:50]:  # Limit to first 50 EIPs to avoid token limits
+            formatted.append(f"EIP-{eip.eip}: {eip.title} (Status: {eip.status}, Category: {eip.category})")
+        return "\n".join(formatted)
