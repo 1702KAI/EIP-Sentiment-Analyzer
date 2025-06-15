@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CSV - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-5">
+            <h2>
+                <i class="fas fa-upload text-primary me-3"></i>
+                Upload CSV File
+            </h2>
+            <p class="text-muted">Upload your CSV file containing EIP/ERC comment data to start the analysis</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-csv me-2"></i>
+                    File Upload
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Maximum file size: 16MB. Only CSV files are supported.
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-upload me-2"></i>
+                            Upload and Analyze
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list-check me-2"></i>
+                        Required CSV Columns
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-paragraph text-primary me-2"></i>
+                                    <strong>paragraphs</strong> - Main text content
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-heading text-warning me-2"></i>
+                                    <strong>headings</strong> - Header text content
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-list text-success me-2"></i>
+                                    <strong>unordered_lists</strong> - List text content
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-tag text-info me-2"></i>
+                                    <strong>topic</strong> - Topic/title with EIP/ERC IDs
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <div class="alert alert-warning">
+                <h6 class="alert-heading">
+                    <i class="fas fa-clock me-2"></i>
+                    Processing Time
+                </h6>
+                <p class="mb-0">
+                    The sentiment analysis pipeline involves multiple stages and external API calls. 
+                    Processing typically takes 2-5 minutes depending on file size and API response times.
+                    You'll be redirected to a progress page after upload.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

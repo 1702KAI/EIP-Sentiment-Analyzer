@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-brain text-primary me-3"></i>
+                EIP Sentiment Analyzer
+            </h1>
+            <p class="lead text-muted">
+                Advanced three-stage sentiment analysis pipeline for Ethereum Improvement Proposals (EIPs) and Ethereum Request for Comments (ERCs)
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-upload fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Upload CSV Data</h5>
+                        <p class="card-text">Upload your CSV file containing EIP/ERC comment data to start the sentiment analysis process.</p>
+                        <a href="{{ url_for('upload_page') }}" class="btn btn-primary">
+                            <i class="fas fa-file-upload me-2"></i>Upload File
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-chart-line fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title">View Results</h5>
+                        <p class="card-text">Browse and download the results from your completed sentiment analysis jobs.</p>
+                        <a href="{{ url_for('results') }}" class="btn btn-success">
+                            <i class="fas fa-eye me-2"></i>View Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h3 class="mb-4">
+                <i class="fas fa-cogs me-2"></i>
+                Three-Stage Analysis Pipeline
+            </h3>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-brain me-2"></i>Stage 1: Sentiment Analysis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>VADER sentiment scoring</li>
+                                <li><i class="fas fa-check text-success me-2"></i>EIP/ERC number extraction</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Text preprocessing</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Sentiment aggregation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-database me-2"></i>Stage 2: Data Enrichment
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>EIPs Insight API integration</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Metadata fetching</li>
+                                <li><i class="fas fa-check text-success me-2"></i>PR status tracking</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Review data processing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Stage 3: Final Analysis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Data merging & deduplication</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Status conflict detection</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Summary statistics</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Final output generation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        CSV Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Your CSV file must contain the following columns:</p>
+                    <ul>
+                        <li><strong>paragraphs</strong> - Text content from paragraphs</li>
+                        <li><strong>headings</strong> - Text content from headings</li>
+                        <li><strong>unordered_lists</strong> - Text content from lists</li>
+                        <li><strong>topic</strong> - Topic/title containing EIP or ERC identifiers</li>
+                    </ul>
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tip:</strong> The analyzer will automatically extract EIP and ERC numbers from the topic field using pattern matching.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
