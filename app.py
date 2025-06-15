@@ -163,7 +163,10 @@ def process_csv_background(job_id, filepath, output_dir):
                     for _, row in df.iterrows():
                         # Skip rows with invalid or missing EIP values
                         eip_val = row.get('eip', '')
-                        if pd.isna(eip_val) or str(eip_val).strip() == '':
+                        try:
+                            if eip_val is None or str(eip_val).strip() == '' or str(eip_val).lower() == 'nan':
+                                continue
+                        except:
                             continue
                             
                         sentiment = EIPSentiment()
@@ -299,7 +302,7 @@ def job_status(job_id):
         flash('Job not found', 'error')
         return redirect(url_for('index'))
     
-    return render_template('job_debug.html', job_id=job_id, job=job)
+    return render_template('results.html', job_id=job_id, job=job)
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
