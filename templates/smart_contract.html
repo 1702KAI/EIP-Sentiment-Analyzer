@@ -275,8 +275,15 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
             // Store generated contract
             generatedContract = result.generated_code;
             
-            // Update contract tab
-            document.getElementById('contractCode').textContent = result.generated_code;
+            // Update contract tab with syntax highlighting
+            const contractCodeEl = document.getElementById('contractCode');
+            contractCodeEl.textContent = result.generated_code;
+            contractCodeEl.className = 'language-solidity';
+            
+            // Apply syntax highlighting if Prism is available
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightElement(contractCodeEl);
+            }
             
             // Show result section and enable other buttons
             document.getElementById('resultSection').style.display = 'block';
@@ -361,7 +368,15 @@ document.getElementById('testBtn')?.addEventListener('click', async function() {
         loadingModal.hide();
         
         if (result.success) {
-            document.getElementById('testCode').textContent = result.test_code;
+            const testCodeEl = document.getElementById('testCode');
+            testCodeEl.textContent = result.test_code;
+            testCodeEl.className = 'language-javascript';
+            
+            // Apply syntax highlighting if Prism is available
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightElement(testCodeEl);
+            }
+            
             // Switch to tests tab
             const testsTab = new bootstrap.Tab(document.getElementById('tests-tab'));
             testsTab.show();
