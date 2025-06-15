@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Check file size (16MB limit)
-                const maxSize = 16 * 1024 * 1024; // 16MB in bytes
+                // Check file size (100MB limit)
+                const maxSize = 100 * 1024 * 1024; // 100MB in bytes
                 if (file.size > maxSize) {
-                    alert('File size exceeds 16MB limit. Please choose a smaller file.');
+                    alert('File size exceeds 100MB limit. Please choose a smaller file.');
                     fileInput.value = '';
                     return;
                 }
