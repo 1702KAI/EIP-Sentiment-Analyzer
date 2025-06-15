@@ -396,7 +396,42 @@ new Chart(histogramCtx, {
     }
 });
 
+    } catch (error) {
+        console.error('Chart initialization error:', error);
+        document.querySelectorAll('[id$="Error"]').forEach(el => {
+            el.style.display = 'block';
+            el.innerHTML = '<p class="text-warning">Error loading charts</p>';
+        });
+    }
 } // End initializeCharts function
+
+// Initialize charts when DOM is ready and Chart.js is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Try immediate initialization
+    if (typeof Chart !== 'undefined') {
+        initializeCharts();
+    } else {
+        // Wait for Chart.js to load
+        const checkChart = setInterval(() => {
+            if (typeof Chart !== 'undefined') {
+                clearInterval(checkChart);
+                initializeCharts();
+            }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => {
+            clearInterval(checkChart);
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js loading timeout');
+                document.querySelectorAll('[id$="Error"]').forEach(el => {
+                    el.style.display = 'block';
+                    el.innerHTML = '<p class="text-danger">Chart library loading timeout</p>';
+                });
+            }
+        }, 5000);
+    }
+});
 
 // Export dashboard data as CSV
 function exportDashboardData() {
