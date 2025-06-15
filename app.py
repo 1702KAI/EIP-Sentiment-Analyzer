@@ -4,7 +4,8 @@ import uuid
 import threading
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
-from flask_login import current_user
+from flask_login import LoginManager, login_user, logout_user, current_user, login_required
+from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.utils import secure_filename
@@ -22,6 +23,12 @@ db = SQLAlchemy(model_class=Base)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
 
 # Database configuration
 database_url = os.environ.get("DATABASE_URL")
@@ -78,6 +85,24 @@ class OAuth(OAuthConsumerMixin, db.Model):
         'provider',
         name='uq_user_browser_session_key_provider',
     ),)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
+
+def require_admin(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Please log in to access this feature.', 'warning')
+            return redirect(url_for('login'))
+        
+        if not current_user.is_admin:
+            flash('Admin access required for this feature.', 'error')
+            return redirect(url_for('index'))
+
+        return f(*args, **kwargs)
+    return decorated_function
 class AnalysisJob(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     filename = db.Column(db.String(255), nullable=False)
@@ -284,11 +309,56 @@ def process_csv_background(job_id, filepath, output_dir):
 def index():
     return render_template('index.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login_post():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    # Simple admin authentication - you can replace this with your preferred method
+    admin_credentials = {
+        'admin@example.com': 'admin123',
+        'admin@sentiment.com': 'password123'
+    }
+    
+    if email in admin_credentials and admin_credentials[email] == password:
+        # Create or get user
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                id=str(uuid.uuid4()),
+                email=email,
+                first_name='Admin',
+                last_name='User',
+                is_admin=True
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        login_user(user)
+        flash('Logged in successfully!', 'success')
+        return redirect(url_for('upload_page'))
+    else:
+        flash('Invalid email or password.', 'error')
+        return redirect(url_for('login'))
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('index'))
+
 @app.route('/upload')
+@require_admin
 def upload_page():
     return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
+@require_admin
 def upload_file():
     
     if 'file' not in request.files:
@@ -389,6 +459,7 @@ def download_file(job_id, filename):
     return send_file(output_file.file_path, as_attachment=True)
 
 @app.route('/results')
+@require_admin
 def results():
     
     # Show all completed jobs
