@@ -158,20 +158,17 @@ def convert_markdown_to_pdf():
 
 def process_markdown_text(text):
     """Process markdown formatting in text"""
+    # First escape any existing HTML characters in the content
+    text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    
     # Handle bold text
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
-    # Handle italic text
+    # Handle italic text  
     text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
-    # Handle inline code
+    # Handle inline code - use simpler approach to avoid HTML attribute issues
     text = re.sub(r'`(.*?)`', r'<font name="Courier">\1</font>', text)
     # Handle links (simple conversion)
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'\1', text)
-    # Escape special characters for reportlab
-    text = text.replace('<', '&lt;').replace('>', '&gt;')
-    # Restore our formatting tags
-    text = text.replace('&lt;b&gt;', '<b>').replace('&lt;/b&gt;', '</b>')
-    text = text.replace('&lt;i&gt;', '<i>').replace('&lt;/i&gt;', '</i>')
-    text = text.replace('&lt;font', '<font').replace('&lt;/font&gt;', '</font>')
     
     return text
 
