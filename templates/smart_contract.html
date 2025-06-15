@@ -163,8 +163,9 @@ contract MyContract {
                                     <label for="eipStatusFilter" class="form-label">EIP Status Filter</label>
                                     <select class="form-select" id="eipStatusFilter" onchange="updateStatusInfo()">
                                         <option value="final_only">Final Status Only (Stable)</option>
+                                        <option value="final_living">Final & Living (Stable)</option>
                                         <option value="all_statuses">All Statuses (Explore All)</option>
-                                        <option value="draft_living">Draft & Living (Experimental)</option>
+                                        <option value="draft_review">Draft & Review (Experimental)</option>
                                         <option value="exclude_withdrawn">Exclude Withdrawn</option>
                                     </select>
                                     <div class="form-text" id="statusHelp">
@@ -614,7 +615,7 @@ function updateRecommendationsTab(recommendations) {
                                     Consider reviewing implementation carefully or exploring alternatives.
                                 </div>
                             ` : ''}
-                            ${rec.status !== 'Final' ? `
+                            ${rec.status !== 'Final' && rec.status !== 'Living' ? `
                                 <div class="alert alert-warning mt-2">
                                     <i class="fas fa-info-circle me-2"></i>
                                     <strong>Notice:</strong> This EIP is in ${rec.status} status. It may undergo changes and is not yet finalized. 
@@ -646,8 +647,9 @@ function updateStatusInfo() {
     
     const descriptions = {
         'final_only': 'Final EIPs are stable and recommended for production use.',
-        'all_statuses': 'Includes all EIP statuses - use caution with non-Final statuses in production.',
-        'draft_living': 'Draft & Living EIPs are experimental and may change. Use with caution.',
+        'final_living': 'Final & Living EIPs are both stable proposals suitable for production use.',
+        'all_statuses': 'Includes all EIP statuses - use caution with Draft/Review statuses in production.',
+        'draft_review': 'Draft & Review EIPs are experimental and may change. Use with caution.',
         'exclude_withdrawn': 'Shows all statuses except Withdrawn EIPs (which are obsolete).'
     };
     

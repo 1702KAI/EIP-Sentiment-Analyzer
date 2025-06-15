@@ -631,8 +631,10 @@ def analyze_code_and_recommend():
         
         if eip_status_filter == 'final_only':
             eip_data_list = query.filter(EIPSentiment.status == 'Final').all()
-        elif eip_status_filter == 'draft_living':
-            eip_data_list = query.filter(EIPSentiment.status.in_(['Draft', 'Living'])).all()
+        elif eip_status_filter == 'final_living':
+            eip_data_list = query.filter(EIPSentiment.status.in_(['Final', 'Living'])).all()
+        elif eip_status_filter == 'draft_review':
+            eip_data_list = query.filter(EIPSentiment.status.in_(['Draft', 'Review'])).all()
         elif eip_status_filter == 'exclude_withdrawn':
             eip_data_list = query.filter(EIPSentiment.status != 'Withdrawn').all()
         else:  # all_statuses
