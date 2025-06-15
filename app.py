@@ -161,18 +161,47 @@ def process_csv_background(job_id, filepath, output_dir):
                 try:
                     df = pd.read_csv(final_file)
                     for _, row in df.iterrows():
+                        # Skip rows with invalid or missing EIP values
+                        eip_val = row.get('eip', '')
+                        if pd.isna(eip_val) or str(eip_val).strip() == '':
+                            continue
+                            
                         sentiment = EIPSentiment()
                         sentiment.job_id = job_id
-                        sentiment.eip = str(row.get('eip', ''))
-                        sentiment.unified_compound = row.get('unified_compound')
-                        sentiment.unified_pos = row.get('unified_pos')
-                        sentiment.unified_neg = row.get('unified_neg')
-                        sentiment.unified_neu = row.get('unified_neu')
-                        sentiment.total_comment_count = row.get('total_comment_count')
-                        sentiment.category = row.get('category')
-                        sentiment.status = row.get('status')
-                        sentiment.title = row.get('title')
-                        sentiment.author = row.get('author')
+                        sentiment.eip = str(eip_val).strip()
+                        
+                        # Handle numeric fields with proper type conversion
+                        def safe_float(val):
+                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                                return None
+                            try:
+                                return float(val)
+                            except (ValueError, TypeError):
+                                return None
+                        
+                        def safe_int(val):
+                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                                return None
+                            try:
+                                return int(float(val))
+                            except (ValueError, TypeError):
+                                return None
+                        
+                        def safe_str(val):
+                            if pd.isna(val) or val == '' or str(val).lower() in ['nan', 'none', 'null']:
+                                return None
+                            return str(val).strip()
+                        
+                        sentiment.unified_compound = safe_float(row.get('unified_compound'))
+                        sentiment.unified_pos = safe_float(row.get('unified_pos'))
+                        sentiment.unified_neg = safe_float(row.get('unified_neg'))
+                        sentiment.unified_neu = safe_float(row.get('unified_neu'))
+                        sentiment.total_comment_count = safe_int(row.get('total_comment_count'))
+                        sentiment.category = safe_str(row.get('category'))
+                        sentiment.status = safe_str(row.get('status'))
+                        sentiment.title = safe_str(row.get('title'))
+                        sentiment.author = safe_str(row.get('author'))
+                        
                         db.session.add(sentiment)
                 except Exception as e:
                     logging.warning(f"Could not save sentiment data: {e}")
@@ -270,7 +299,7 @@ def job_status(job_id):
         flash('Job not found', 'error')
         return redirect(url_for('index'))
     
-    return render_template('results.html', job_id=job_id, job=job)
+    return render_template('job_debug.html', job_id=job_id, job=job)
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
