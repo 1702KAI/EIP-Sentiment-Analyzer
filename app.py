@@ -11,8 +11,25 @@ from sentiment_analyzer import SentimentAnalyzer
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Import the db from models
+from models import db
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+
+# Database configuration
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+else:
+    # Fallback for development
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sentiment_analyzer.db"
+
+db.init_app(app)
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
@@ -27,40 +44,117 @@ app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Global dictionary to track processing jobs
-processing_jobs = {}
+# Initialize database tables
+with app.app_context():
+    # Import models here to avoid circular imports
+    import models  # noqa: F401
+    db.create_all()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_csv_background(job_id, filepath, output_dir):
     """Background task to process CSV file through sentiment analysis pipeline"""
+    from models import AnalysisJob, OutputFile, EIPSentiment
+    
     try:
-        processing_jobs[job_id]['status'] = 'processing'
-        processing_jobs[job_id]['stage'] = 'Initializing sentiment analyzer...'
-        
-        analyzer = SentimentAnalyzer()
-        
-        processing_jobs[job_id]['stage'] = 'Stage 1: Running VADER sentiment analysis...'
-        stage1_output = analyzer.run_stage1(filepath, output_dir)
-        processing_jobs[job_id]['progress'] = 33
-        
-        processing_jobs[job_id]['stage'] = 'Stage 2: Fetching EIPs Insight data...'
-        stage2_output = analyzer.run_stage2(output_dir)
-        processing_jobs[job_id]['progress'] = 66
-        
-        processing_jobs[job_id]['stage'] = 'Stage 3: Merging and finalizing data...'
-        final_output = analyzer.run_stage3(output_dir)
-        processing_jobs[job_id]['progress'] = 100
-        
-        processing_jobs[job_id]['status'] = 'completed'
-        processing_jobs[job_id]['stage'] = 'Analysis completed successfully!'
-        processing_jobs[job_id]['output_files'] = final_output
-        
+        with app.app_context():
+            # Update job status to processing
+            job = AnalysisJob.query.get(job_id)
+            if not job:
+                return
+            
+            job.status = 'processing'
+            job.stage = 'Initializing sentiment analyzer...'
+            job.updated_at = datetime.utcnow()
+            db.session.commit()
+            
+            analyzer = SentimentAnalyzer()
+            
+            # Stage 1
+            job.stage = 'Stage 1: Running VADER sentiment analysis...'
+            job.progress = 10
+            db.session.commit()
+            
+            stage1_output = analyzer.run_stage1(filepath, output_dir)
+            job.progress = 33
+            db.session.commit()
+            
+            # Stage 2
+            job.stage = 'Stage 2: Fetching EIPs Insight data...'
+            db.session.commit()
+            
+            stage2_output = analyzer.run_stage2(output_dir)
+            job.progress = 66
+            db.session.commit()
+            
+            # Stage 3
+            job.stage = 'Stage 3: Merging and finalizing data...'
+            db.session.commit()
+            
+            final_output = analyzer.run_stage3(output_dir)
+            
+            # Save output files to database
+            for file_path in final_output:
+                if os.path.exists(file_path):
+                    filename = os.path.basename(file_path)
+                    file_type = 'unknown'
+                    if 'final_merged' in filename:
+                        file_type = 'final_analysis'
+                    elif 'summary' in filename:
+                        file_type = 'summary'
+                    elif 'enriched' in filename:
+                        file_type = 'enriched'
+                    
+                    output_file = OutputFile(
+                        job_id=job_id,
+                        filename=filename,
+                        file_path=file_path,
+                        file_type=file_type,
+                        file_size=os.path.getsize(file_path)
+                    )
+                    db.session.add(output_file)
+            
+            # Save sentiment data if final merged file exists
+            final_file = next((f for f in final_output if 'final_merged' in f), None)
+            if final_file and os.path.exists(final_file):
+                try:
+                    df = pd.read_csv(final_file)
+                    for _, row in df.iterrows():
+                        sentiment = EIPSentiment(
+                            job_id=job_id,
+                            eip=str(row.get('eip', '')),
+                            unified_compound=row.get('unified_compound'),
+                            unified_pos=row.get('unified_pos'),
+                            unified_neg=row.get('unified_neg'),
+                            unified_neu=row.get('unified_neu'),
+                            total_comment_count=row.get('total_comment_count'),
+                            category=row.get('category'),
+                            status=row.get('status'),
+                            title=row.get('title'),
+                            author=row.get('author')
+                        )
+                        db.session.add(sentiment)
+                except Exception as e:
+                    logging.warning(f"Could not save sentiment data: {e}")
+            
+            # Complete the job
+            job.status = 'completed'
+            job.stage = 'Analysis completed successfully!'
+            job.progress = 100
+            job.completed_at = datetime.utcnow()
+            job.updated_at = datetime.utcnow()
+            db.session.commit()
+            
     except Exception as e:
         logging.error(f"Error processing job {job_id}: {str(e)}")
-        processing_jobs[job_id]['status'] = 'error'
-        processing_jobs[job_id]['error'] = str(e)
+        with app.app_context():
+            job = AnalysisJob.query.get(job_id)
+            if job:
+                job.status = 'error'
+                job.error_message = str(e)
+                job.updated_at = datetime.utcnow()
+                db.session.commit()
 
 @app.route('/')
 def index():
@@ -72,6 +166,8 @@ def upload_page():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    from models import AnalysisJob
+    
     if 'file' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.url)
@@ -102,19 +198,21 @@ def upload_file():
             os.remove(filepath)
             return redirect(request.url)
         
-        # Create job
+        # Create job in database
         job_id = str(uuid.uuid4())
         output_dir = os.path.join(app.config['OUTPUT_FOLDER'], job_id)
         os.makedirs(output_dir, exist_ok=True)
         
-        processing_jobs[job_id] = {
-            'status': 'queued',
-            'filename': unique_filename,
-            'created_at': datetime.now(),
-            'progress': 0,
-            'stage': 'Queued for processing...',
-            'output_files': []
-        }
+        job = AnalysisJob(
+            id=job_id,
+            filename=unique_filename,
+            original_filename=file.filename,
+            status='queued',
+            progress=0,
+            stage='Queued for processing...'
+        )
+        db.session.add(job)
+        db.session.commit()
         
         # Start background processing
         thread = threading.Thread(target=process_csv_background, args=(job_id, filepath, output_dir))
@@ -129,37 +227,54 @@ def upload_file():
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
-    if job_id not in processing_jobs:
+    from models import AnalysisJob, OutputFile
+    
+    job = AnalysisJob.query.get(job_id)
+    if not job:
         flash('Job not found', 'error')
         return redirect(url_for('index'))
     
-    job = processing_jobs[job_id]
     return render_template('results.html', job_id=job_id, job=job)
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
-    if job_id not in processing_jobs:
+    from models import AnalysisJob
+    
+    job = AnalysisJob.query.get(job_id)
+    if not job:
         return jsonify({'error': 'Job not found'}), 404
     
-    return jsonify(processing_jobs[job_id])
+    return jsonify({
+        'status': job.status,
+        'progress': job.progress,
+        'stage': job.stage,
+        'error': job.error_message,
+        'created_at': job.created_at.isoformat() if job.created_at else None,
+        'completed_at': job.completed_at.isoformat() if job.completed_at else None
+    })
 
 @app.route('/download/<job_id>/<filename>')
 def download_file(job_id, filename):
-    if job_id not in processing_jobs:
+    from models import AnalysisJob, OutputFile
+    
+    job = AnalysisJob.query.get(job_id)
+    if not job:
         flash('Job not found', 'error')
         return redirect(url_for('index'))
     
-    file_path = os.path.join(app.config['OUTPUT_FOLDER'], job_id, filename)
-    if not os.path.exists(file_path):
+    output_file = OutputFile.query.filter_by(job_id=job_id, filename=filename).first()
+    if not output_file or not os.path.exists(output_file.file_path):
         flash('File not found', 'error')
         return redirect(url_for('job_status', job_id=job_id))
     
-    return send_file(file_path, as_attachment=True)
+    return send_file(output_file.file_path, as_attachment=True)
 
 @app.route('/results')
 def results():
+    from models import AnalysisJob
+    
     # Show all completed jobs
-    completed_jobs = {k: v for k, v in processing_jobs.items() if v['status'] == 'completed'}
+    completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
     return render_template('results.html', jobs=completed_jobs)
 
 if __name__ == '__main__':
