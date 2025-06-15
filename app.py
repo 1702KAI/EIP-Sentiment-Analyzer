@@ -9,6 +9,7 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.utils import secure_filename
 import pandas as pd
 from sentiment_analyzer import SentimentAnalyzer
+from smart_contract_generator import EIPCodeGenerator
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -204,7 +205,7 @@ def process_csv_background(job_id, filepath, output_dir):
                         sentiment.unified_neg = safe_float(row.get('unified_neg'))
                         sentiment.unified_neu = safe_float(row.get('unified_neu'))
                         sentiment.total_comment_count = safe_int(row.get('total_comment_count'))
-                        sentiment.category = safe_str(row.get('category'))
+                        sentiment.category = safe_str(row.get('category_y'))
                         sentiment.status = safe_str(row.get('status'))
                         sentiment.title = safe_str(row.get('title'))
                         sentiment.author = safe_str(row.get('author'))
@@ -499,6 +500,115 @@ def export_dashboard_data(job_id):
     response.headers['Content-Disposition'] = f'attachment; filename=sentiment_analysis_{job.original_filename}_{job_id[:8]}.csv'
     
     return response
+
+@app.route('/smart-contract')
+def smart_contract():
+    """Smart Contract Generator page"""
+    # Get all completed jobs for selection
+    jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
+    
+    # Get selected job ID from query parameter
+    selected_job_id = request.args.get('job_id')
+    
+    # If no job selected, use the most recent one
+    if not selected_job_id and jobs:
+        selected_job_id = jobs[0].id
+    
+    sentiment_data = []
+    
+    if selected_job_id:
+        # Get sentiment data for the selected job
+        sentiment_data = EIPSentiment.query.filter_by(job_id=selected_job_id).all()
+    
+    return render_template('smart_contract.html', 
+                         jobs=jobs, 
+                         selected_job_id=selected_job_id,
+                         sentiment_data=sentiment_data)
+
+@app.route('/api/generate-contract', methods=['POST'])
+def generate_contract():
+    """Generate smart contract code using OpenAI"""
+    try:
+        data = request.get_json()
+        job_id = data.get('job_id')
+        eip_number = data.get('eip_number')
+        contract_type = data.get('contract_type')
+        custom_prompt = data.get('custom_prompt')
+        
+        if not job_id or not eip_number or not contract_type:
+            return jsonify({'success': False, 'error': 'Missing required parameters'})
+        
+        # Get EIP data from database
+        eip_data_obj = EIPSentiment.query.filter_by(job_id=job_id, eip=eip_number).first()
+        
+        if not eip_data_obj:
+            return jsonify({'success': False, 'error': 'EIP not found in database'})
+        
+        # Convert to dictionary for the generator
+        eip_data = {
+            'eip': eip_data_obj.eip,
+            'title': eip_data_obj.title,
+            'status': eip_data_obj.status,
+            'category': eip_data_obj.category,
+            'author': eip_data_obj.author
+        }
+        
+        # Initialize code generator
+        generator = EIPCodeGenerator()
+        
+        # Generate the contract
+        result = generator.generate_eip_implementation(eip_data, contract_type, custom_prompt)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Contract generation error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/analyze-security', methods=['POST'])
+def analyze_security():
+    """Analyze smart contract security using OpenAI"""
+    try:
+        data = request.get_json()
+        contract_code = data.get('contract_code')
+        
+        if not contract_code:
+            return jsonify({'success': False, 'error': 'Contract code is required'})
+        
+        # Initialize code generator
+        generator = EIPCodeGenerator()
+        
+        # Analyze security
+        result = generator.analyze_contract_security(contract_code)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Security analysis error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/generate-tests', methods=['POST'])
+def generate_tests():
+    """Generate test suite for smart contract using OpenAI"""
+    try:
+        data = request.get_json()
+        contract_code = data.get('contract_code')
+        contract_name = data.get('contract_name', 'Contract')
+        
+        if not contract_code:
+            return jsonify({'success': False, 'error': 'Contract code is required'})
+        
+        # Initialize code generator
+        generator = EIPCodeGenerator()
+        
+        # Generate tests
+        result = generator.generate_test_suite(contract_code, contract_name)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Test generation error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

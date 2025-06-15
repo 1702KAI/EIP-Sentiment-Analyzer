@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Contract Generator - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-code me-2"></i>Smart Contract Generator</h1>
+                <div class="btn-group" role="group">
+                    <select class="form-select" id="jobSelect" onchange="loadJobData()">
+                        <option value="">Select Analysis Job...</option>
+                        {% for job in jobs %}
+                        <option value="{{ job.id }}" {% if selected_job_id == job.id %}selected{% endif %}>
+                            {{ job.original_filename }} ({{ job.created_at.strftime('%Y-%m-%d %H:%M') }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <a href="/dashboard" class="btn btn-secondary ms-2">
+                        <i class="fas fa-chart-bar me-1"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if sentiment_data %}
+    <!-- Contract Generation Form -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-magic me-2"></i>Generate Smart Contract</h5>
+                </div>
+                <div class="card-body">
+                    <form id="contractForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="eipSelect" class="form-label">Select EIP</label>
+                                    <select class="form-select" id="eipSelect" required>
+                                        <option value="">Choose an EIP...</option>
+                                        {% for eip in sentiment_data %}
+                                        <option value="{{ eip.eip }}" 
+                                                data-title="{{ eip.title or 'N/A' }}"
+                                                data-status="{{ eip.status or 'N/A' }}"
+                                                data-category="{{ eip.category or 'N/A' }}"
+                                                data-author="{{ eip.author or 'N/A' }}">
+                                            EIP-{{ eip.eip }}: {{ eip.title or 'Untitled' }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contractType" class="form-label">Contract Type</label>
+                                    <select class="form-select" id="contractType" required>
+                                        <option value="">Select type...</option>
+                                        <option value="ERC20">ERC-20 Token</option>
+                                        <option value="ERC721">ERC-721 NFT</option>
+                                        <option value="ERC1155">ERC-1155 Multi Token</option>
+                                        <option value="Governance">Governance Contract</option>
+                                        <option value="Proxy">Proxy/Upgradeable</option>
+                                        <option value="DeFi">DeFi Protocol</option>
+                                        <option value="Security">Security Pattern</option>
+                                        <option value="Custom">Custom Implementation</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="customPrompt" class="form-label">Custom Requirements (Optional)</label>
+                            <textarea class="form-control" id="customPrompt" rows="3" 
+                                      placeholder="Add specific requirements, features, or constraints for your smart contract..."></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" id="generateBtn">
+                                <i class="fas fa-cogs me-1"></i>Generate Contract
+                            </button>
+                            <button type="button" class="btn btn-info" id="analyzeBtn" disabled>
+                                <i class="fas fa-shield-alt me-1"></i>Security Analysis
+                            </button>
+                            <button type="button" class="btn btn-success" id="testBtn" disabled>
+                                <i class="fas fa-vial me-1"></i>Generate Tests
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>EIP Information</h5>
+                </div>
+                <div class="card-body" id="eipInfo">
+                    <p class="text-muted">Select an EIP to view details</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generated Content Tabs -->
+    <div class="row" id="resultSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="resultTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="contract-tab" data-bs-toggle="tab" data-bs-target="#contract" type="button" role="tab">
+                                <i class="fas fa-file-code me-1"></i>Smart Contract
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button" role="tab">
+                                <i class="fas fa-shield-alt me-1"></i>Security Analysis
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab">
+                                <i class="fas fa-vial me-1"></i>Test Suite
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="resultTabsContent">
+                        <!-- Smart Contract Tab -->
+                        <div class="tab-pane fade show active" id="contract" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Generated Smart Contract</h6>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('contractCode')">
+                                    <i class="fas fa-copy me-1"></i>Copy Code
+                                </button>
+                            </div>
+                            <pre><code class="language-solidity" id="contractCode">// Generated contract will appear here</code></pre>
+                        </div>
+                        
+                        <!-- Security Analysis Tab -->
+                        <div class="tab-pane fade" id="analysis" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Security Analysis Report</h6>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('analysisContent')">
+                                    <i class="fas fa-copy me-1"></i>Copy Analysis
+                                </button>
+                            </div>
+                            <div id="analysisContent" class="border rounded p-3 bg-light">
+                                Security analysis will appear here after generation
+                            </div>
+                        </div>
+                        
+                        <!-- Test Suite Tab -->
+                        <div class="tab-pane fade" id="tests" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Test Suite</h6>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('testCode')">
+                                    <i class="fas fa-copy me-1"></i>Copy Tests
+                                </button>
+                            </div>
+                            <pre><code class="language-javascript" id="testCode">// Generated tests will appear here</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                    <h4>No Analysis Data Available</h4>
+                    <p class="text-muted">Select a completed analysis job to generate smart contracts or upload a new CSV file to get started.</p>
+                    <a href="/upload" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i>Upload CSV File
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 id="loadingText">Generating smart contract...</h5>
+                <p class="text-muted mb-0">This may take a few moments</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let generatedContract = '';
+
+function loadJobData() {
+    const jobId = document.getElementById('jobSelect').value;
+    if (jobId) {
+        window.location.href = `/smart-contract?job_id=${jobId}`;
+    } else {
+        window.location.href = '/smart-contract';
+    }
+}
+
+// Update EIP info when selection changes
+document.getElementById('eipSelect')?.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const infoDiv = document.getElementById('eipInfo');
+    
+    if (selectedOption.value) {
+        const title = selectedOption.dataset.title;
+        const status = selectedOption.dataset.status;
+        const category = selectedOption.dataset.category;
+        const author = selectedOption.dataset.author;
+        
+        infoDiv.innerHTML = `
+            <div class="mb-2"><strong>EIP:</strong> ${selectedOption.value}</div>
+            <div class="mb-2"><strong>Title:</strong> ${title}</div>
+            <div class="mb-2"><strong>Status:</strong> <span class="badge bg-secondary">${status}</span></div>
+            <div class="mb-2"><strong>Category:</strong> ${category}</div>
+            <div class="mb-0"><strong>Author:</strong> ${author}</div>
+        `;
+    } else {
+        infoDiv.innerHTML = '<p class="text-muted">Select an EIP to view details</p>';
+    }
+});
+
+// Handle form submission
+document.getElementById('contractForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const eipSelect = document.getElementById('eipSelect');
+    const contractType = document.getElementById('contractType').value;
+    const customPrompt = document.getElementById('customPrompt').value;
+    
+    if (!eipSelect.value || !contractType) {
+        alert('Please select both an EIP and contract type');
+        return;
+    }
+    
+    // Show loading modal
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        const response = await fetch('/api/generate-contract', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                job_id: document.getElementById('jobSelect').value,
+                eip_number: eipSelect.value,
+                contract_type: contractType,
+                custom_prompt: customPrompt
+            })
+        });
+        
+        const result = await response.json();
+        loadingModal.hide();
+        
+        if (result.success) {
+            // Store generated contract
+            generatedContract = result.generated_code;
+            
+            // Update contract tab
+            document.getElementById('contractCode').textContent = result.generated_code;
+            
+            // Show result section and enable other buttons
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = false;
+            document.getElementById('testBtn').disabled = false;
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error generating contract: ' + result.error);
+        }
+    } catch (error) {
+        loadingModal.hide();
+        alert('Error: ' + error.message);
+    }
+});
+
+// Security analysis
+document.getElementById('analyzeBtn')?.addEventListener('click', async function() {
+    if (!generatedContract) {
+        alert('Please generate a contract first');
+        return;
+    }
+    
+    document.getElementById('loadingText').textContent = 'Analyzing security...';
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        const response = await fetch('/api/analyze-security', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contract_code: generatedContract
+            })
+        });
+        
+        const result = await response.json();
+        loadingModal.hide();
+        
+        if (result.success) {
+            document.getElementById('analysisContent').innerHTML = '<pre>' + result.analysis + '</pre>';
+            // Switch to analysis tab
+            const analysisTab = new bootstrap.Tab(document.getElementById('analysis-tab'));
+            analysisTab.show();
+        } else {
+            alert('Error analyzing contract: ' + result.error);
+        }
+    } catch (error) {
+        loadingModal.hide();
+        alert('Error: ' + error.message);
+    }
+});
+
+// Test generation
+document.getElementById('testBtn')?.addEventListener('click', async function() {
+    if (!generatedContract) {
+        alert('Please generate a contract first');
+        return;
+    }
+    
+    const contractType = document.getElementById('contractType').value;
+    document.getElementById('loadingText').textContent = 'Generating tests...';
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        const response = await fetch('/api/generate-tests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contract_code: generatedContract,
+                contract_name: contractType
+            })
+        });
+        
+        const result = await response.json();
+        loadingModal.hide();
+        
+        if (result.success) {
+            document.getElementById('testCode').textContent = result.test_code;
+            // Switch to tests tab
+            const testsTab = new bootstrap.Tab(document.getElementById('tests-tab'));
+            testsTab.show();
+        } else {
+            alert('Error generating tests: ' + result.error);
+        }
+    } catch (error) {
+        loadingModal.hide();
+        alert('Error: ' + error.message);
+    }
+});
+
+// Copy to clipboard function
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent || element.innerText;
+    
+    navigator.clipboard.writeText(text).then(function() {
+        // Show temporary success message
+        const button = event.target.closest('button');
+        const originalHtml = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHtml;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

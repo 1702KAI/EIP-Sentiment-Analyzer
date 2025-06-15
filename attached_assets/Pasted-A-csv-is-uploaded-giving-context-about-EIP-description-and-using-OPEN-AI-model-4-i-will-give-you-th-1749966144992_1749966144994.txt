@@ -1,0 +1,123 @@
+A .csv is uploaded giving context about EIP description and using OPEN AI model 4 i will give you the credentials so prompt me for the API key, here are some examples OpenAI Integration for Code Generation
+Smart Contract Code Generation
+from openai import OpenAI
+import json
+ 
+class EIPCodeGenerator:
+def __init__(self, api_key: str):
+self.client = OpenAI(api_key=api_key)
+
+async def generate_eip_implementation(self, eip_number: int, contract_type: str, custom_prompt: str = None):
+"""
+Generate Solidity smart contract code for EIP implementation
+
+Used for:
+- ERC token standard implementations (ERC-20, ERC-721, ERC-1155)
+- Protocol upgrades and governance contracts
+- Gas optimization examples
+- Security pattern implementations
+"""
+
+# Fetch EIP metadata from database
+eip_data = await self.get_eip_metadata(eip_number)
+
+if not eip_data:
+raise HTTPException(status_code=404, detail="EIP not found")
+
+# Construct intelligent prompt
+system_prompt = f"""
+You are an expert Solidity developer specializing in Ethereum Improvement Proposals.
+Generate production-ready, secure, and gas-optimized smart contract code.
+
+EIP Details:
+- Number: {eip_data['eip_number']}
+- Title: {eip_data['title']}
+- Status: {eip_data['status']}
+- Category: {eip_data['category']}
+- Authors: {eip_data['authors']}
+
+Contract Type: {contract_type}
+"""
+
+user_prompt = custom_prompt or f"""
+Generate a complete Solidity implementation for EIP-{eip_number}: {eip_data['title']}.
+
+Requirements:
+1. Follow the exact specification from the EIP
+2. Include comprehensive error handling
+3. Implement gas optimization patterns
+4. Add detailed NatSpec documentation
+5. Include security considerations
+6. Provide deployment and testing examples
+
+Focus on {contract_type} implementation patterns.
+"""
+
+try:
+response = await self.client.chat.completions.create(
+model="gpt-4", # Use GPT-4 for complex code generation
+messages=[
+{"role": "system", "content": system_prompt},
+{"role": "user", "content": user_prompt}
+],
+max_tokens=4000,
+temperature=0.1 # Low temperature for consistent code generation
+)
+
+generated_code = response.choices[0].message.content
+
+# Store generation in database for history tracking
+await self.store_code_generation(
+eip_number=eip_number,
+contract_type=contract_type,
+prompt=user_prompt,
+generated_code=generated_code
+)
+
+return {
+"eip_number": eip_number,
+"contract_type": contract_type,
+"generated_code": generated_code,
+"eip_metadata": eip_data
+}
+
+except Exception as e:
+raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
+ 
+async def analyze_contract_security(self, contract_code: str):
+"""
+AI-powered security analysis of smart contract code
+
+Used for:
+- Vulnerability detection
+- Gas optimization suggestions
+- Best practice compliance
+- Code quality assessment
+"""
+
+analysis_prompt = f"""
+Analyze this Solidity smart contract for security vulnerabilities, gas optimization opportunities, and best practices:
+ 
+```solidity
+{contract_code}
+```
+ 
+Provide a comprehensive analysis including:
+1. Security vulnerabilities (reentrancy, overflow, access control, etc.)
+2. Gas optimization opportunities
+3. Code quality and best practices
+4. EIP compliance verification
+5. Recommended improvements
+ 
+Format the response as JSON with severity levels.
+"""
+
+response = await self.client.chat.completions.create(
+model="gpt-4",
+messages=[{"role": "user", "content": analysis_prompt}],
+max_tokens=2000,
+temperature=0.2
+)
+
+return response.choices[0].message.content
+  
