@@ -220,8 +220,8 @@ Focus on EIPs that are actually implemented or could be implemented by this code
             )
 
             import json
-            content = response.choices[0].message.content
-            if not content:
+            content = response.choices[0].message.content or ""
+            if not content.strip():
                 return {"success": False, "error": "Empty response from AI"}
             recommendations = json.loads(content)
             
