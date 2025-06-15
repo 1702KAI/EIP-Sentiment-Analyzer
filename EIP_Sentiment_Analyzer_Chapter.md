@@ -918,25 +918,7 @@ class OutputFile(db.Model):
     job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     file_path = db.Column(db.String(500), nullable=False)
-    file_Storage Strategy**:
-- **Path Management**: Full file system pathsclass EIPSentiment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
-    eip = db.Column(db.String(10), nullable=False)
-    unified_compound = db.Column(db.Float)
-    unified_pos = db.Column(db.Float)
-    unified_neg = db.Column(db.Float)
-    unified_neu = db.Column(db.Float)
-    total_comment_count = db.Column(db.Integer)
-    category = db.Column(db.String(100))
-    status = db.Column(db.String(50))
-    title = db.Column(db.Text)
-    author = db.Column(db.Text)
-
-    __table_args__ = (db.Index('idx_eip_job', 'eip', 'job_id'),)
-```
-
-**Analytics Optimization**:
+    file_Storage Strategy**Analytics Optimization**:
 - **Composite Indexing**: Optimized queries on EIP and job combinations
 - **Flexible Numeric Storage**: Handles various sentiment score ranges
 - **Text Fields**: Accommodates variable-length titles and author lists
@@ -1935,15 +1917,7 @@ def fetch_api_data(url, name, timeout=30):
 
     except Exception as err:
         logging.error(f"❌ Failed to fetch {name}: {err}")
-        return pd.DataFrame()  # Return empty DataFrame for graceful failure**Error Handling Strategy**:
-- **Timeout Protection**: Prevents hanging requests (30-second timeout)
-- **HTTP Status Validation**: `raise_for_status()` catches HTTP errors
-- **JSON Structure Flexibility**: Handles various API response formats
-- **Graceful Degradation**: Empty DataFrames when APIs fail
-
-**Data Normalization Process**:
-```python
-# JSON normalization for nested structures
+        return pd.DataFrame()  # Return empty DataFrame for graceful failure# JSON normalization for nested structures
 status_df = pd.json_normalize(all_entries)
 status_df.columns = status_df.columns.str.strip().str.lower()
 ```
@@ -2680,3 +2654,342 @@ class SentimentAPI(Resource):
     @api.marshal_list_with(sentiment_model)
     def get(self, job_id):
         """Get sentiment analysis results for a job"""
+```
+
+## 6. Implementation
+
+### a) Chapter Overview
+
+The implementation of the EIP Sentiment Analyzer involved careful selection of technologies and frameworks optimized for data science workflows, real-time web applications, and AI integration. This chapter details the technical decisions, architecture implementation, and core functionality development that brought the platform from concept to production.
+
+The implementation follows a modular architecture approach, separating concerns across different components while maintaining tight integration for optimal performance. Key implementation areas include the three-stage sentiment analysis pipeline, web application framework, AI integration layer, and database design.
+
+### b) Technology Selection
+
+#### i. Technology Stack
+
+**Architecture Overview with Technologies:**
+
+```
+┌─────────────────────┐    ┌──────────────────────┐    ┌─────────────────────┐
+│   Frontend Layer    │    │   Backend Layer      │    │   External APIs     │
+│                     │◄──►│                      │◄──►│                     │
+│ • Bootstrap 5       │    │ • Flask 3.0          │    │ • EIPsInsight       │
+│ • Chart.js          │    │ • SQLAlchemy 2.0     │    │ • OpenAI GPT-4o     │
+│ • jQuery 3.6        │    │ • Flask-Login        │    │ • GitHub API        │
+│ • HTML5/CSS3        │    │ • Gunicorn           │    │                     │
+└─────────────────────┘    └──────────────────────┘    └─────────────────────┘
+         │                           │
+         │                           │
+         ▼                           ▼
+┌─────────────────────┐    ┌──────────────────────┐
+│   Data Science      │    │   Database Layer     │
+│                     │    │                      │
+│ • Pandas 2.0        │    │ • PostgreSQL (Prod) │
+│ • NLTK 3.8          │    │ • SQLite (Dev)       │
+│ • NumPy 1.24        │    │ • Alembic Migrations │
+│ • Requests 2.31     │    │                      │
+└─────────────────────┘    └──────────────────────┘
+```
+
+This technology stack provides comprehensive coverage for data processing, web application development, AI integration, and database management while maintaining compatibility with Replit's deployment environment.
+
+#### ii. Data Selection (for data science projects)
+
+**Primary Data Sources:**
+- **CSV Forum Data**: Community discussions from Ethereum Magicians forum containing paragraphs, headings, unordered lists, and topic information
+- **EIPsInsight API**: Comprehensive EIP metadata including status, authors, categories, and historical transitions
+- **GitHub PR Data**: Pull request information for tracking proposed status changes
+- **Reviewer Activity Data**: Editor review patterns and monthly activity statistics
+
+**Justification for Data Selection:**
+The CSV forum data was selected as the primary input because it contains rich contextual information from actual community discussions. This provides more nuanced sentiment analysis compared to simple vote counts or basic metadata. The EIPsInsight API integration adds authoritative metadata that enhances the analysis with official status tracking and historical context.
+
+#### iii. Selection of Programming Language
+
+**Python 3.11 Selected - Justification:**
+
+1. **Data Science Ecosystem**: Python offers the most comprehensive data science libraries (Pandas, NumPy, NLTK) with excellent performance and community support
+2. **Web Framework Maturity**: Flask provides lightweight, flexible web development with excellent integration capabilities for data science workflows
+3. **AI/ML Integration**: Native support for OpenAI API and other machine learning libraries
+4. **Rapid Development**: Python's syntax enables fast iteration and prototyping essential for research-oriented projects
+5. **Community Support**: Extensive documentation and community resources for blockchain and NLP applications
+
+**Alternative Considerations:**
+- **JavaScript/Node.js**: Rejected due to limited data science library ecosystem
+- **R**: Rejected due to web application development complexity
+- **Java**: Rejected due to development speed and complexity for research applications
+
+#### iv. Libraries Selected
+
+**Core Libraries with Justifications:**
+
+| Library | Version | Purpose | Justification |
+|---------|---------|---------|---------------|
+| **Flask** | 3.0 | Web Framework | Lightweight, flexible, excellent for data science integration |
+| **Pandas** | 2.0+ | Data Processing | Industry standard for DataFrame operations and CSV processing |
+| **NLTK** | 3.8 | NLP Processing | VADER sentiment analyzer specifically designed for social media text |
+| **SQLAlchemy** | 2.0 | Database ORM | Flexible database abstraction supporting multiple backends |
+| **OpenAI** | 1.0+ | AI Integration | Official SDK for GPT-4o integration with robust error handling |
+| **Requests** | 2.31 | HTTP Client | Reliable API integration with timeout and error handling |
+| **Bootstrap** | 5.1 | UI Framework | Responsive design with minimal custom CSS requirements |
+
+**Key Selection Criteria:**
+- **Maturity**: Established libraries with stable APIs and long-term support
+- **Performance**: Optimized for large dataset processing and concurrent web requests
+- **Integration**: Seamless compatibility between data science and web application components
+- **Documentation**: Comprehensive documentation and community support
+
+#### v. Frameworks Selected
+
+**Primary Frameworks:**
+
+1. **Flask Web Framework**
+   - **Justification**: Provides minimal overhead while supporting complex data processing workflows
+   - **Benefits**: Built-in development server, flexible routing, easy testing, excellent for prototyping
+   - **Integration**: Native support for background processing and real-time updates
+
+2. **SQLAlchemy ORM Framework**
+   - **Justification**: Database-agnostic approach supporting both SQLite (development) and PostgreSQL (production)
+   - **Benefits**: Relationship management, migration support, query optimization
+   - **Scalability**: Connection pooling and batch processing capabilities
+
+**UI Framework: Bootstrap 5**
+- **Justification**: Rapid responsive design development with minimal custom CSS
+- **Components**: Pre-built components for forms, tables, modals, and progress indicators
+- **Compatibility**: Works seamlessly with Chart.js for data visualization
+
+**Data Processing Framework: Pandas**
+- **Justification**: Optimized DataFrame operations for large-scale data manipulation
+- **Performance**: Vectorized operations and memory-efficient processing
+- **Integration**: Native CSV processing and database connectivity
+
+#### vi. IDEs
+
+**Primary Development Environment: Replit**
+- **Justification**: Cloud-based development with instant deployment capabilities
+- **Features**: Collaborative development, version control integration, automatic dependency management
+- **Benefits**: No local setup required, consistent environment across team members
+
+**Additional Tools:**
+- **Code Editor**: Built-in Monaco editor with Python syntax highlighting
+- **Debugging**: Integrated debugging tools and console access
+- **Package Management**: UV package manager for fast dependency installation
+
+#### vii. Summary of Technology Selection (Tabular Format)
+
+| Category | Technology | Version | Justification | Alternatives Considered |
+|----------|------------|---------|---------------|------------------------|
+| **Backend Language** | Python | 3.11 | Data science ecosystem, rapid development | JavaScript, Java, R |
+| **Web Framework** | Flask | 3.0 | Lightweight, data science integration | Django, FastAPI |
+| **Database** | PostgreSQL/SQLite | 15+/3.40+ | Flexibility, scalability | MongoDB, MySQL |
+| **ORM** | SQLAlchemy | 2.0 | Database agnostic, relationship management | Django ORM, Peewee |
+| **NLP Library** | NLTK | 3.8 | VADER sentiment analyzer | spaCy, TextBlob |
+| **Data Processing** | Pandas | 2.0+ | DataFrame operations, CSV processing | Dask, Polars |
+| **AI Integration** | OpenAI SDK | 1.0+ | GPT-4o access, robust error handling | Anthropic, Hugging Face |
+| **Frontend Framework** | Bootstrap | 5.1 | Responsive design, rapid development | Tailwind CSS, Bulma |
+| **Visualization** | Chart.js | 4.0 | Interactive charts, web compatibility | D3.js, Plotly |
+| **HTTP Client** | Requests | 2.31 | Reliable API integration | urllib3, httpx |
+| **Development Environment** | Replit | - | Cloud development, instant deployment | VS Code, PyCharm |
+
+### c) Implementation of Core Functionalities
+
+#### i. Three-Stage Sentiment Analysis Pipeline
+
+**Stage 1: VADER Sentiment Analysis Implementation**class SentimentAnalyzer:
+    def __init__(self):
+        try:
+            nltk.download("vader_lexicon", quiet=True)
+            self.analyzer = SentimentIntensityAnalyzer()
+            logging.info("✅ VADER sentiment analyzer initialized")
+        except Exception as e:
+            logging.error(f"❌ Failed to initialize VADER: {e}")
+            raise
+
+    def run_stage1(self, input_file, output_dir):
+        # Load and preprocess CSV data
+        df = pd.read_csv(input_file)
+        df.columns = df.columns.str.strip().str.lower()
+
+        # Combine text columns for comprehensive analysis
+        df["text"] = df[["paragraphs", "headings", "unordered_lists"]].fillna("").agg(" ".join, axis=1)
+
+        # Apply VADER sentiment analysis
+        scores = df["text"].apply(lambda x: self.analyzer.polarity_scores(x)).apply(pd.Series)
+        df = pd.concat([df, scores], axis=1)
+
+        # Extract EIP/ERC numbers using regex
+        df["eip_num"] = df["topic"].str.extract(r"eip-?(\d{2,5})", flags=re.IGNORECASE)
+        df["erc_num"] = df["topic"].str.extract(r"erc-?(\d{2,5})", flags=re.IGNORECASE)
+```
+
+This implementation processes raw forum discussion data and extracts sentiment scores while identifying EIP/ERC proposal numbers through pattern matching.
+
+**Stage 2: External API Integration**
+
+```python
+def run_stage2(self, output_dir):
+    endpoints = {
+        "all_eips": "https://eipsinsight.com/api/new/all",
+        "graphsv4": "https://eipsinsight.com/api/new/graphsv4",
+        "all_prs": "https://eipsinsight.com/api/allprs",
+        "reviewers_all": "https://eipsinsight.com/api/ReviewersCharts/data/all"
+    }
+
+    for name, url in endpoints.items():
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+
+            # Handle different JSON structures
+            if isinstance(data, list):
+                df = pd.DataFrame(data)
+            elif isinstance(data, dict):
+                all_items = []
+                for key in data:
+                    all_items.extend(data[key])
+                df = pd.DataFrame(all_items)
+
+            output_path = os.path.join(output_dir, f"{name}.csv")
+            df.to_csv(output_path, index=False)
+
+        except Exception as err:
+            logging.error(f"❌ Failed to fetch {name}: {err}")
+            pd.DataFrame().to_csv(output_path, index=False)
+```
+
+Stage 2 integrates multiple external APIs to enrich sentiment data with comprehensive EIP metadata and historical tracking information.
+
+**Stage 3: Data Consolidation**
+
+```python
+def run_stage3(self, output_dir):
+    # Load all data sources
+    sentiment_df = pd.read_csv(os.path.join(output_dir, "unified_sentiment_summary.csv"))
+    status_meta_df = pd.read_csv(os.path.join(output_dir, "eipsinsight_data/all_eips.csv"))
+
+    # Sequential merging with different join strategies
+    merged_df = sentiment_df.copy()
+    if not status_meta_df.empty:
+        merged_df = pd.merge(merged_df, status_meta_df, on="eip", how="outer")
+
+    # Data deduplication and cleaning
+    merged_df = merged_df.drop_duplicates()
+    columns_to_drop = ['title_x', 'author_x', 'status_x', 'status_conflict']
+    merged_df.drop(columns=[col for col in columns_to_drop if col in merged_df.columns], inplace=True)
+
+    # Generate summary statistics
+    summary_stats = {
+        'total_eips_analyzed': len(merged_df),
+        'avg_sentiment_compound': merged_df['unified_compound'].mean(),
+        'most_positive_eip': merged_df.loc[merged_df['unified_compound'].idxmax(), 'eip'],
+        'most_negative_eip': merged_df.loc[merged_df['unified_compound'].idxmin(), 'eip'],
+    }
+```
+
+#### ii. AI-Powered Smart Contract Generation
+
+**OpenAI Integration Architecture**
+
+```python
+class EIPCodeGenerator:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+    def generate_eip_implementation(self, eip_data, contract_type, custom_prompt=None):
+        system_prompt = f"""
+        You are an expert Solidity developer specializing in Ethereum Improvement Proposals.
+        Generate production-ready, secure, and gas-optimized smart contract code.
+
+        EIP Details:
+        - Number: {eip_data.get('eip', 'N/A')}
+        - Title: {eip_data.get('title', 'N/A')}
+        - Status: {eip_data.get('status', 'N/A')}
+        - Category: {eip_data.get('category', 'N/A')}
+        """
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=4000,
+            temperature=0.1
+        )
+
+        return {
+            "success": True,
+            "generated_code": response.choices[0].message.content,
+            "eip_metadata": eip_data
+        }
+```
+
+This implementation provides four distinct modes: contract generation, security analysis, test suite generation, and EIP recommendations with sentiment integration.
+
+#### iii. Web Application Framework
+
+**Flask Application Structure**
+
+```python
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+
+# Database configuration
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sentiment_analyzer.db"
+
+# Initialize extensions
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+```
+
+**Background Job Processing**
+
+```python
+def process_csv_background(job_id, filepath, output_dir):
+    try:
+        with app.app_context():
+            job = AnalysisJob.query.get(job_id)
+            job.status = 'processing'
+            job.stage = 'Initializing sentiment analyzer...'
+            db.session.commit()
+
+            analyzer = SentimentAnalyzer()
+
+            # Stage 1: Sentiment Analysis
+            job.stage = 'Stage 1: Running VADER sentiment analysis...'
+            job.progress = 20
+            db.session.commit()
+            analyzer.run_stage1(filepath, output_dir)
+
+            # Stage 2: External API Integration
+            job.stage = 'Stage 2: Fetching EIPsInsight data...'
+            job.progress = 60
+            db.session.commit()
+            analyzer.run_stage2(output_dir)
+
+            # Stage 3: Final Data Consolidation
+            job.stage = 'Stage 3: Consolidating final results...'
+            job.progress = 90
+            db.session.commit()
+            output_files = analyzer.run_stage3(output_dir)
+
+            job.status = 'completed'
+            job.progress = 100
+            job.completed_at = datetime.utcnow()
+
+    except Exception as e:
+        job.status = 'error'
+        job.error_message = str(e)
+    finally:
+        db.session.commit()
