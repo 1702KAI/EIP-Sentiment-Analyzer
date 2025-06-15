@@ -450,5 +450,55 @@ def dashboard():
                          sentiment_data=sentiment_data,
                          **dashboard_stats)
 
+@app.route('/api/export/dashboard/<job_id>')
+def export_dashboard_data(job_id):
+    """Export dashboard data as CSV"""
+    job = AnalysisJob.query.get_or_404(job_id)
+    sentiment_data = EIPSentiment.query.filter_by(job_id=job_id).all()
+    
+    if not sentiment_data:
+        flash('No data available for export', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Create CSV response
+    import io
+    output = io.StringIO()
+    import csv
+    
+    writer = csv.writer(output)
+    
+    # Write headers
+    headers = [
+        'EIP', 'Title', 'Author', 'Category', 'Status', 
+        'Unified_Compound', 'Unified_Positive', 'Unified_Negative', 'Unified_Neutral',
+        'Total_Comment_Count', 'Created_At'
+    ]
+    writer.writerow(headers)
+    
+    # Write data rows
+    for eip in sentiment_data:
+        writer.writerow([
+            eip.eip,
+            eip.title or '',
+            eip.author or '',
+            eip.category or '',
+            eip.status or '',
+            eip.unified_compound if eip.unified_compound is not None else '',
+            eip.unified_pos if eip.unified_pos is not None else '',
+            eip.unified_neg if eip.unified_neg is not None else '',
+            eip.unified_neu if eip.unified_neu is not None else '',
+            eip.total_comment_count if eip.total_comment_count is not None else '',
+            eip.created_at.strftime('%Y-%m-%d %H:%M:%S') if eip.created_at else ''
+        ])
+    
+    # Create response
+    output.seek(0)
+    from flask import make_response
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=sentiment_analysis_{job.original_filename}_{job_id[:8]}.csv'
+    
+    return response
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

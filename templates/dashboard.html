@@ -123,17 +123,34 @@
                     <h5><i class="fas fa-table me-2"></i>EIP Details</h5>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <label for="tableSearch" class="form-label">Search:</label>
+                            <input type="text" class="form-control d-inline-block" id="tableSearch" style="width: 300px;" placeholder="Search EIPs..." onkeyup="filterTable()">
+                        </div>
+                        <div>
+                            <label for="statusFilter" class="form-label">Filter by Status:</label>
+                            <select class="form-select d-inline-block" id="statusFilter" style="width: 200px;" onchange="filterTable()">
+                                <option value="">All Statuses</option>
+                                <option value="Final">Final</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Living">Living</option>
+                                <option value="Review">Review</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped" id="eipTable">
                             <thead>
                                 <tr>
-                                    <th>EIP</th>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Sentiment</th>
-                                    <th>Compound Score</th>
-                                    <th>Comments</th>
+                                    <th onclick="sortTable(0)" style="cursor: pointer;">EIP <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(1)" style="cursor: pointer;">Title <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(2)" style="cursor: pointer;">Category <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(3)" style="cursor: pointer;">Status <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(4)" style="cursor: pointer;">Sentiment <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(5)" style="cursor: pointer;">Compound Score <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(6)" style="cursor: pointer;">Comments <i class="fas fa-sort"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -361,6 +378,81 @@ new Chart(histogramCtx, {
         }
     }
 });
+// Export dashboard data as CSV
+function exportDashboardData() {
+    const jobId = document.getElementById('jobSelect').value;
+    if (jobId) {
+        window.open(`/api/export/dashboard/${jobId}`, '_blank');
+    }
+}
+
+// Table filtering functionality
+function filterTable() {
+    const searchValue = document.getElementById('tableSearch').value.toLowerCase();
+    const statusValue = document.getElementById('statusFilter').value;
+    const table = document.getElementById('eipTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        let showRow = true;
+
+        // Text search across all cells
+        if (searchValue) {
+            let found = false;
+            for (let j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().includes(searchValue)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) showRow = false;
+        }
+
+        // Status filter
+        if (statusValue && showRow) {
+            const statusCell = cells[3]; // Status column
+            if (statusCell && !statusCell.textContent.includes(statusValue)) {
+                showRow = false;
+            }
+        }
+
+        row.style.display = showRow ? '' : 'none';
+    }
+}
+
+// Table sorting functionality
+let sortDirection = {};
+function sortTable(columnIndex) {
+    const table = document.getElementById('eipTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+    
+    // Determine sort direction
+    const direction = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+    sortDirection[columnIndex] = direction;
+    
+    rows.sort((a, b) => {
+        const aValue = a.getElementsByTagName('td')[columnIndex].textContent.trim();
+        const bValue = b.getElementsByTagName('td')[columnIndex].textContent.trim();
+        
+        // Handle numeric values for EIP and score columns
+        if (columnIndex === 0 || columnIndex === 5) {
+            const aNum = parseFloat(aValue) || 0;
+            const bNum = parseFloat(bValue) || 0;
+            return direction === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+        
+        // String comparison
+        return direction === 'asc' ? 
+            aValue.localeCompare(bValue) : 
+            bValue.localeCompare(aValue);
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
 {% endif %}
 </script>
 {% endblock %}
