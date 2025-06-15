@@ -86,21 +86,21 @@
                         Download Results
                     </h6>
                     <div class="list-group">
-                        {% for file_path in job.output_files %}
-                        {% set filename = file_path.split('/')[-1] %}
+                        {% for output_file in job.output_files %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fas fa-file-csv text-success me-2"></i>
-                                <strong>{{ filename }}</strong>
-                                {% if 'final_merged' in filename %}
+                                <strong>{{ output_file.filename }}</strong>
+                                {% if output_file.file_type == 'final_analysis' %}
                                 <span class="badge bg-primary ms-2">Final Analysis</span>
-                                {% elif 'summary' in filename %}
+                                {% elif output_file.file_type == 'summary' %}
                                 <span class="badge bg-info ms-2">Summary</span>
-                                {% elif 'enriched' in filename %}
+                                {% elif output_file.file_type == 'enriched' %}
                                 <span class="badge bg-warning ms-2">Enriched Data</span>
                                 {% endif %}
+                                <small class="text-muted ms-2">({{ (output_file.file_size / 1024)|round(1) }} KB)</small>
                             </div>
-                            <a href="{{ url_for('download_file', job_id=job_id, filename=filename) }}" 
+                            <a href="{{ url_for('download_file', job_id=job_id, filename=output_file.filename) }}" 
                                class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-download me-1"></i>Download
                             </a>
@@ -196,7 +196,7 @@ setInterval(function() {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <small class="text-muted">Completed:</small><br>
-                                <span>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                <span>{{ job.completed_at.strftime('%Y-%m-%d %H:%M') if job.completed_at else job.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
                             </div>
                             <div class="col-6">
                                 <small class="text-muted">Files Generated:</small><br>
@@ -205,13 +205,13 @@ setInterval(function() {
                         </div>
 
                         <div class="d-flex gap-2">
-                            <a href="{{ url_for('job_status', job_id=job_id) }}" 
+                            <a href="{{ url_for('job_status', job_id=job.id) }}" 
                                class="btn btn-sm btn-primary">
                                 <i class="fas fa-eye me-1"></i>View Details
                             </a>
                             {% if job.output_files %}
-                            {% set main_file = job.output_files[0].split('/')[-1] %}
-                            <a href="{{ url_for('download_file', job_id=job_id, filename=main_file) }}" 
+                            {% set main_file = job.output_files[0] %}
+                            <a href="{{ url_for('download_file', job_id=job.id, filename=main_file.filename) }}" 
                                class="btn btn-sm btn-outline-success">
                                 <i class="fas fa-download me-1"></i>Download Main
                             </a>

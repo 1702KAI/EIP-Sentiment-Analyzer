@@ -97,11 +97,8 @@ def allowed_file(filename):
 
 def process_csv_background(job_id, filepath, output_dir):
     """Background task to process CSV file through sentiment analysis pipeline"""
-    from models import AnalysisJob, OutputFile, EIPSentiment
-    
     try:
         with app.app_context():
-            # Update job status to processing
             job = AnalysisJob.query.get(job_id)
             if not job:
                 return
@@ -148,12 +145,13 @@ def process_csv_background(job_id, filepath, output_dir):
                     elif 'enriched' in filename:
                         file_type = 'enriched'
                     
-                    output_file = OutputFile()
-                    output_file.job_id = job_id
-                    output_file.filename = filename
-                    output_file.file_path = file_path
-                    output_file.file_type = file_type
-                    output_file.file_size = os.path.getsize(file_path)
+                    output_file = OutputFile(
+                        job_id=job_id,
+                        filename=filename,
+                        file_path=file_path,
+                        file_type=file_type,
+                        file_size=os.path.getsize(file_path)
+                    )
                     db.session.add(output_file)
             
             # Save sentiment data if final merged file exists
@@ -162,18 +160,19 @@ def process_csv_background(job_id, filepath, output_dir):
                 try:
                     df = pd.read_csv(final_file)
                     for _, row in df.iterrows():
-                        sentiment = EIPSentiment()
-                        sentiment.job_id = job_id
-                        sentiment.eip = str(row.get('eip', ''))
-                        sentiment.unified_compound = row.get('unified_compound')
-                        sentiment.unified_pos = row.get('unified_pos')
-                        sentiment.unified_neg = row.get('unified_neg')
-                        sentiment.unified_neu = row.get('unified_neu')
-                        sentiment.total_comment_count = row.get('total_comment_count')
-                        sentiment.category = row.get('category')
-                        sentiment.status = row.get('status')
-                        sentiment.title = row.get('title')
-                        sentiment.author = row.get('author')
+                        sentiment = EIPSentiment(
+                            job_id=job_id,
+                            eip=str(row.get('eip', '')),
+                            unified_compound=row.get('unified_compound'),
+                            unified_pos=row.get('unified_pos'),
+                            unified_neg=row.get('unified_neg'),
+                            unified_neu=row.get('unified_neu'),
+                            total_comment_count=row.get('total_comment_count'),
+                            category=row.get('category'),
+                            status=row.get('status'),
+                            title=row.get('title'),
+                            author=row.get('author')
+                        )
                         db.session.add(sentiment)
                 except Exception as e:
                     logging.warning(f"Could not save sentiment data: {e}")
@@ -206,8 +205,6 @@ def upload_page():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    from models import AnalysisJob
-    
     if 'file' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.url)
@@ -267,8 +264,6 @@ def upload_file():
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
-    from models import AnalysisJob, OutputFile
-    
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -278,8 +273,6 @@ def job_status(job_id):
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
-    from models import AnalysisJob
-    
     job = AnalysisJob.query.get(job_id)
     if not job:
         return jsonify({'error': 'Job not found'}), 404
@@ -295,8 +288,6 @@ def api_job_status(job_id):
 
 @app.route('/download/<job_id>/<filename>')
 def download_file(job_id, filename):
-    from models import AnalysisJob, OutputFile
-    
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -311,8 +302,6 @@ def download_file(job_id, filename):
 
 @app.route('/results')
 def results():
-    from models import AnalysisJob
-    
     # Show all completed jobs
     completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
     return render_template('results.html', jobs=completed_jobs)
