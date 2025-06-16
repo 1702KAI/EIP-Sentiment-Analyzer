@@ -1,0 +1,357 @@
+~/workspace$ python -m pytest tests/test_sentiment_analyzer.py -v
+=========================================== test session starts ===========================================
+platform linux -- Python 3.11.10, pytest-8.4.0, pluggy-1.6.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pytest.ini
+plugins: anyio-4.9.0, Flask-Dance-7.1.0, cov-6.2.1, flask-1.3.0
+collected 10 items                                                                                        
+
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_analyzer_initialization PASSED        [ 10%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage1_processing FAILED              [ 20%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage2_eips_data_fetch PASSED         [ 30%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage3_data_merging FAILED            [ 40%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_eip_number_extraction PASSED   [ 50%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_sentiment_aggregation PASSED   [ 60%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_data_validation PASSED         [ 70%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_full_pipeline_integration FAILED [ 80%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_error_handling_missing_files PASSED [ 90%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_error_handling_invalid_csv PASSED [100%]
+
+================================================ FAILURES =================================================
+______________________________ TestSentimentAnalyzer.test_stage1_processing _______________________________
+
+self = <test_sentiment_analyzer.TestSentimentAnalyzer object at 0x7f0650d13110>
+mock_vader = <MagicMock name='SentimentIntensityAnalyzer' id='139665107193168'>
+
+    @patch('sentiment_analyzer.SentimentIntensityAnalyzer')
+    def test_stage1_processing(self, mock_vader):
+        """Test stage 1 VADER sentiment analysis"""
+        # Mock VADER analyzer
+        mock_analyzer_instance = MagicMock()
+        mock_analyzer_instance.polarity_scores.return_value = {
+            'compound': 0.5, 'pos': 0.7, 'neu': 0.2, 'neg': 0.1
+        }
+        mock_vader.return_value = mock_analyzer_instance
+    
+        # Create test CSV
+        test_data = {
+            'paragraphs': ['This is a positive comment about EIP-1'],
+            'headings': ['EIP-1 Discussion'],
+            'unordered_lists': ['- Feature 1'],
+            'topic': ['eip-1']
+        }
+    
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            df = pd.DataFrame(test_data)
+            df.to_csv(f.name, index=False)
+            input_file = f.name
+    
+        with tempfile.TemporaryDirectory() as output_dir:
+            analyzer = SentimentAnalyzer()
+            result = analyzer.run_stage1(input_file, output_dir)
+    
+            assert result is not None
+>           assert os.path.exists(result)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sentiment_analyzer.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = ['/tmp/tmpeh0xgx_x/enriched_sentiment_with_status.csv', '/tmp/tmpeh0xgx_x/unified_sentiment_summary.csv']
+
+>   ???
+E   TypeError: stat: path should be string, bytes, os.PathLike or integer, not list
+
+<frozen genericpath>:19: TypeError
+------------------------------------------ Captured stderr call -------------------------------------------
+INFO:root:✅ VADER sentiment analyzer initialized
+INFO:root:🚀 Starting Stage 1: VADER sentiment analysis...
+INFO:root:🧠 Running VADER sentiment analysis...
+INFO:root:🔍 Extracting EIP and ERC identifiers...
+INFO:root:📊 Aggregating sentiment for EIPs...
+INFO:root:📊 Aggregating sentiment for ERCs...
+INFO:root:🔗 Merging EIP and ERC sentiment...
+INFO:root:📈 Calculating unified sentiment scores...
+INFO:root:🌐 Fetching EIP metadata from EIPsInsight API...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): eipsinsight.com:443
+DEBUG:urllib3.connectionpool:https://eipsinsight.com:443 "GET /api/new/all HTTP/1.1" 200 None
+INFO:root:✅ Total proposals found: 988
+INFO:root:🔗 Merging sentiment with EIP metadata...
+INFO:root:✅ Merged 0 rows with metadata
+INFO:root:💾 Stage 1 completed successfully
+-------------------------------------------- Captured log call --------------------------------------------
+INFO     root:sentiment_analyzer.py:17 ✅ VADER sentiment analyzer initialized
+INFO     root:sentiment_analyzer.py:24 🚀 Starting Stage 1: VADER sentiment analysis...
+INFO     root:sentiment_analyzer.py:34 🧠 Running VADER sentiment analysis...
+INFO     root:sentiment_analyzer.py:39 🔍 Extracting EIP and ERC identifiers...
+INFO     root:sentiment_analyzer.py:47 📊 Aggregating sentiment for EIPs...
+INFO     root:sentiment_analyzer.py:58 📊 Aggregating sentiment for ERCs...
+INFO     root:sentiment_analyzer.py:69 🔗 Merging EIP and ERC sentiment...
+INFO     root:sentiment_analyzer.py:82 📈 Calculating unified sentiment scores...
+INFO     root:sentiment_analyzer.py:108 🌐 Fetching EIP metadata from EIPsInsight API...
+DEBUG    urllib3.connectionpool:connectionpool.py:1049 Starting new HTTPS connection (1): eipsinsight.com:443
+DEBUG    urllib3.connectionpool:connectionpool.py:544 https://eipsinsight.com:443 "GET /api/new/all HTTP/1.1" 200 None
+INFO     root:sentiment_analyzer.py:119 ✅ Total proposals found: 988
+INFO     root:sentiment_analyzer.py:140 🔗 Merging sentiment with EIP metadata...
+INFO     root:sentiment_analyzer.py:143 ✅ Merged 0 rows with metadata
+INFO     root:sentiment_analyzer.py:159 💾 Stage 1 completed successfully
+_____________________________ TestSentimentAnalyzer.test_stage3_data_merging ______________________________
+
+self = <test_sentiment_analyzer.TestSentimentAnalyzer object at 0x7f0650d13f90>
+
+    def test_stage3_data_merging(self):
+        """Test stage 3 data merging and final output"""
+        with tempfile.TemporaryDirectory() as output_dir:
+            # Create mock stage1 and stage2 outputs
+            stage1_data = {
+                'eip_erc_numbers': ['1', '20'],
+                'compound': [0.5, 0.3],
+                'pos': [0.7, 0.6],
+                'neu': [0.2, 0.3],
+                'neg': [0.1, 0.1],
+                'comment_count': [10, 15]
+            }
+    
+            stage2_data = {
+                'eip': [1, 20],
+                'title': ['EIP-1: Purpose', 'EIP-20: Token'],
+                'status': ['Living', 'Final'],
+                'category': ['Core', 'ERC'],
+                'author': ['Martin Becze', 'Fabian Vogelsteller']
+            }
+    
+            stage1_df = pd.DataFrame(stage1_data)
+            stage2_df = pd.DataFrame(stage2_data)
+    
+            stage1_file = os.path.join(output_dir, 'aggregated_sentiment_with_eip_erc.csv')
+            stage2_file = os.path.join(output_dir, 'eips_data.csv')
+    
+            stage1_df.to_csv(stage1_file, index=False)
+            stage2_df.to_csv(stage2_file, index=False)
+    
+            analyzer = SentimentAnalyzer()
+            result = analyzer.run_stage3(output_dir)
+    
+            assert result is not None
+>           assert os.path.exists(result)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sentiment_analyzer.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = ['/tmp/tmp322nn7go/final_merged_analysis.csv', '/tmp/tmp322nn7go/analysis_summary.json']
+
+>   ???
+E   TypeError: stat: path should be string, bytes, os.PathLike or integer, not list
+
+<frozen genericpath>:19: TypeError
+------------------------------------------ Captured stderr call -------------------------------------------
+INFO:root:✅ VADER sentiment analyzer initialized
+INFO:root:🔗 Starting Stage 3: Final data merging...
+WARNING:root:⚠️ No data to merge, created empty final file
+INFO:root:💾 Stage 3 completed successfully
+-------------------------------------------- Captured log call --------------------------------------------
+INFO     root:sentiment_analyzer.py:17 ✅ VADER sentiment analyzer initialized
+INFO     root:sentiment_analyzer.py:260 🔗 Starting Stage 3: Final data merging...
+WARNING  root:sentiment_analyzer.py:365 ⚠️ No data to merge, created empty final file
+INFO     root:sentiment_analyzer.py:390 💾 Stage 3 completed successfully
+_____________________ TestSentimentAnalysisIntegration.test_full_pipeline_integration _____________________
+
+self = <test_sentiment_analyzer.TestSentimentAnalysisIntegration object at 0x7f0650d19e50>
+mock_vader = <MagicMock name='SentimentIntensityAnalyzer' id='139665103080912'>
+mock_requests = <MagicMock name='get' id='139665098474832'>
+
+    @patch('requests.get')
+    @patch('sentiment_analyzer.SentimentIntensityAnalyzer')
+    def test_full_pipeline_integration(self, mock_vader, mock_requests):
+        """Test complete three-stage pipeline"""
+        # Mock VADER
+        mock_analyzer_instance = MagicMock()
+        mock_analyzer_instance.polarity_scores.return_value = {
+            'compound': 0.5, 'pos': 0.7, 'neu': 0.2, 'neg': 0.1
+        }
+        mock_vader.return_value = mock_analyzer_instance
+    
+        # Mock API response
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            'data': [
+                {
+                    'eip': 20,
+                    'title': 'EIP-20: Token Standard',
+                    'status': 'Final',
+                    'category': 'ERC',
+                    'author': 'Fabian Vogelsteller'
+                }
+            ]
+        }
+        mock_response.status_code = 200
+        mock_requests.return_value = mock_response
+    
+        # Create test input
+        test_data = {
+            'paragraphs': ['Positive comment about ERC-20 tokens'],
+            'headings': ['ERC-20 Token Discussion'],
+            'unordered_lists': ['- Feature 1'],
+            'topic': ['erc-20']
+        }
+    
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            df = pd.DataFrame(test_data)
+            df.to_csv(f.name, index=False)
+            input_file = f.name
+    
+        with tempfile.TemporaryDirectory() as output_dir:
+            analyzer = SentimentAnalyzer()
+    
+            # Run all three stages
+            stage1_result = analyzer.run_stage1(input_file, output_dir)
+            assert stage1_result is not None
+    
+            stage2_result = analyzer.run_stage2(output_dir)
+            assert stage2_result is not None
+    
+            stage3_result = analyzer.run_stage3(output_dir)
+            assert stage3_result is not None
+    
+            # Verify final output
+>           final_df = pd.read_csv(stage3_result)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sentiment_analyzer.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.pythonlibs/lib/python3.11/site-packages/pandas/io/parsers/readers.py:1026: in read_csv
+    return _read(filepath_or_buffer, kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/pandas/io/parsers/readers.py:620: in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/pandas/io/parsers/readers.py:1620: in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pandas.io.parsers.readers.TextFileReader object at 0x7f0650d12b10>
+f = ['/tmp/tmp8p9ggc0z/final_merged_analysis.csv', '/tmp/tmp8p9ggc0z/analysis_summary.json', '/tmp/tmp8p9ggc0z/enriched_sentiment_with_status.csv', '/tmp/tmp8p9ggc0z/unified_sentiment_summary.csv', '/tmp/tmp8p9ggc0z/graphsv4_transitions.csv']
+engine = 'c'
+
+    def _make_engine(
+        self,
+        f: FilePath | ReadCsvBuffer[bytes] | ReadCsvBuffer[str] | list | IO,
+        engine: CSVEngine = "c",
+    ) -> ParserBase:
+        mapping: dict[str, type[ParserBase]] = {
+            "c": CParserWrapper,
+            "python": PythonParser,
+            "pyarrow": ArrowParserWrapper,
+            "python-fwf": FixedWidthFieldParser,
+        }
+        if engine not in mapping:
+            raise ValueError(
+                f"Unknown engine: {engine} (valid options are {mapping.keys()})"
+            )
+        if not isinstance(f, list):
+            # open file here
+            is_text = True
+            mode = "r"
+            if engine == "pyarrow":
+                is_text = False
+                mode = "rb"
+            elif (
+                engine == "c"
+                and self.options.get("encoding", "utf-8") == "utf-8"
+                and isinstance(stringify_path(f), str)
+            ):
+                # c engine can decode utf-8 bytes, adding TextIOWrapper makes
+                # the c-engine especially for memory_map=True far slower
+                is_text = False
+                if "b" not in mode:
+                    mode += "b"
+            self.handles = get_handle(
+                f,
+                mode,
+                encoding=self.options.get("encoding", None),
+                compression=self.options.get("compression", None),
+                memory_map=self.options.get("memory_map", False),
+                is_text=is_text,
+                errors=self.options.get("encoding_errors", "strict"),
+                storage_options=self.options.get("storage_options", None),
+            )
+            assert self.handles is not None
+            f = self.handles.handle
+    
+        elif engine != "python":
+            msg = f"Invalid file path or buffer object type: {type(f)}"
+>           raise ValueError(msg)
+E           ValueError: Invalid file path or buffer object type: <class 'list'>
+
+.pythonlibs/lib/python3.11/site-packages/pandas/io/parsers/readers.py:1895: ValueError
+------------------------------------------ Captured stderr call -------------------------------------------
+INFO:root:✅ VADER sentiment analyzer initialized
+INFO:root:🚀 Starting Stage 1: VADER sentiment analysis...
+INFO:root:🧠 Running VADER sentiment analysis...
+INFO:root:🔍 Extracting EIP and ERC identifiers...
+INFO:root:📊 Aggregating sentiment for EIPs...
+INFO:root:📊 Aggregating sentiment for ERCs...
+INFO:root:🔗 Merging EIP and ERC sentiment...
+INFO:root:📈 Calculating unified sentiment scores...
+INFO:root:🌐 Fetching EIP metadata from EIPsInsight API...
+INFO:root:✅ Total proposals found: 1
+INFO:root:🔗 Merging sentiment with EIP metadata...
+INFO:root:✅ Merged 1 rows with metadata
+INFO:root:💾 Stage 1 completed successfully
+INFO:root:📡 Starting Stage 2: Fetching EIPs Insight data...
+INFO:root:🔄 Fetching 'all_eips' from https://eipsinsight.com/api/new/all...
+INFO:root:✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/all_eips.csv' with 1 rows.
+INFO:root:🔄 Fetching 'graphsv4' from https://eipsinsight.com/api/new/graphsv4...
+INFO:root:✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/graphsv4.csv' with 1 rows.
+INFO:root:🔄 Fetching 'all_prs' from https://eipsinsight.com/api/allprs...
+INFO:root:✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/all_prs.csv' with 1 rows.
+INFO:root:🔄 Fetching 'reviewers_all' from https://eipsinsight.com/api/ReviewersCharts/data/all...
+INFO:root:✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/reviewers_all.csv' with 1 rows.
+INFO:root:📥 Processing transition data...
+INFO:root:✅ Saved: graphsv4_transitions.csv
+INFO:root:📥 Extracting proposed status changes...
+INFO:root:💾 Stage 2 completed successfully
+INFO:root:🔗 Starting Stage 3: Final data merging...
+ERROR:root:❌ Failed to merge transitions: No columns to parse from file
+INFO:root:✅ Saved final merged analysis: 1 rows
+INFO:root:💾 Stage 3 completed successfully
+-------------------------------------------- Captured log call --------------------------------------------
+INFO     root:sentiment_analyzer.py:17 ✅ VADER sentiment analyzer initialized
+INFO     root:sentiment_analyzer.py:24 🚀 Starting Stage 1: VADER sentiment analysis...
+INFO     root:sentiment_analyzer.py:34 🧠 Running VADER sentiment analysis...
+INFO     root:sentiment_analyzer.py:39 🔍 Extracting EIP and ERC identifiers...
+INFO     root:sentiment_analyzer.py:47 📊 Aggregating sentiment for EIPs...
+INFO     root:sentiment_analyzer.py:58 📊 Aggregating sentiment for ERCs...
+INFO     root:sentiment_analyzer.py:69 🔗 Merging EIP and ERC sentiment...
+INFO     root:sentiment_analyzer.py:82 📈 Calculating unified sentiment scores...
+INFO     root:sentiment_analyzer.py:108 🌐 Fetching EIP metadata from EIPsInsight API...
+INFO     root:sentiment_analyzer.py:119 ✅ Total proposals found: 1
+INFO     root:sentiment_analyzer.py:140 🔗 Merging sentiment with EIP metadata...
+INFO     root:sentiment_analyzer.py:143 ✅ Merged 1 rows with metadata
+INFO     root:sentiment_analyzer.py:159 💾 Stage 1 completed successfully
+INFO     root:sentiment_analyzer.py:164 📡 Starting Stage 2: Fetching EIPs Insight data...
+INFO     root:sentiment_analyzer.py:177 🔄 Fetching 'all_eips' from https://eipsinsight.com/api/new/all...
+INFO     root:sentiment_analyzer.py:198 ✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/all_eips.csv' with 1 rows.
+INFO     root:sentiment_analyzer.py:177 🔄 Fetching 'graphsv4' from https://eipsinsight.com/api/new/graphsv4...
+INFO     root:sentiment_analyzer.py:198 ✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/graphsv4.csv' with 1 rows.
+INFO     root:sentiment_analyzer.py:177 🔄 Fetching 'all_prs' from https://eipsinsight.com/api/allprs...
+INFO     root:sentiment_analyzer.py:198 ✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/all_prs.csv' with 1 rows.
+INFO     root:sentiment_analyzer.py:177 🔄 Fetching 'reviewers_all' from https://eipsinsight.com/api/ReviewersCharts/data/all...
+INFO     root:sentiment_analyzer.py:198 ✅ Saved '/tmp/tmp8p9ggc0z/eipsinsight_data/reviewers_all.csv' with 1 rows.
+INFO     root:sentiment_analyzer.py:207 📥 Processing transition data...
+INFO     root:sentiment_analyzer.py:224 ✅ Saved: graphsv4_transitions.csv
+INFO     root:sentiment_analyzer.py:231 📥 Extracting proposed status changes...
+INFO     root:sentiment_analyzer.py:255 💾 Stage 2 completed successfully
+INFO     root:sentiment_analyzer.py:260 🔗 Starting Stage 3: Final data merging...
+ERROR    root:sentiment_analyzer.py:355 ❌ Failed to merge transitions: No columns to parse from file
+INFO     root:sentiment_analyzer.py:361 ✅ Saved final merged analysis: 1 rows
+INFO     root:sentiment_analyzer.py:390 💾 Stage 3 completed successfully
+========================================= short test summary info =========================================
+FAILED tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage1_processing - TypeError: stat: path should be string, bytes, os.PathLike or integer, not list
+FAILED tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage3_data_merging - TypeError: stat: path should be string, bytes, os.PathLike or integer, not list
+FAILED tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_full_pipeline_integration - ValueError: Invalid file path or buffer object type: <class 'list'>
+======================================= 3 failed, 7 passed in 0.79s =======================================
+~/workspace$ 
