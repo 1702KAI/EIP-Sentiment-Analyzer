@@ -101,24 +101,14 @@ def analysis_job(test_app):
         return job
 
 @pytest.fixture
-def eip_sentiment_data(test_app):
+def eip_sentiment_data(test_app, analysis_job):
     """Create sample EIP sentiment data for testing"""
     with test_app.app_context():
-        # Create a job within this context
-        job = AnalysisJob()
-        job.id = 'sentiment-test-job'
-        job.filename = 'sentiment_test.csv'
-        job.original_filename = 'sentiment_data.csv'
-        job.status = 'completed'
-        job.progress = 100
-        db.session.add(job)
-        db.session.commit()
-        
         sentiment_data = []
         
-        # Create EIP sentiment records
+        # Create EIP sentiment records using the provided analysis_job
         eip1 = EIPSentiment()
-        eip1.job_id = job.id
+        eip1.job_id = analysis_job.id
         eip1.eip = '1'
         eip1.unified_compound = 0.5
         eip1.unified_pos = 0.7

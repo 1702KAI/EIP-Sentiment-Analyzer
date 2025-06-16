@@ -153,6 +153,9 @@ class TestEIPSentimentModel:
         """Test filtering EIP sentiment data"""
         with test_app.app_context():
             db.session.add(analysis_job)
+            for item in eip_sentiment_data:
+                db.session.add(item)
+            db.session.commit()
             job_id = analysis_job.id
             
             # Filter by status
@@ -164,7 +167,7 @@ class TestEIPSentimentModel:
             
             # Filter by category
             erc_eips = EIPSentiment.query.filter_by(
-                job_id=analysis_job.id, category='ERC'
+                job_id=job_id, category='ERC'
             ).all()
             
             assert len(erc_eips) == 2  # EIP-20 and EIP-721
@@ -173,6 +176,9 @@ class TestEIPSentimentModel:
         """Test filtering EIPs with negative sentiment"""
         with test_app.app_context():
             db.session.add(analysis_job)
+            for item in eip_sentiment_data:
+                db.session.add(item)
+            db.session.commit()
             job_id = analysis_job.id
             
             negative_eips = EIPSentiment.query.filter(
@@ -267,14 +273,17 @@ class TestModelValidation:
     def test_eip_job_index(self, test_app, analysis_job):
         """Test EIP-job compound index functionality"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             # Create two sentiment records for same EIP in same job
             sentiment1 = EIPSentiment()
-            sentiment1.job_id = analysis_job.id
+            sentiment1.job_id = job_id
             sentiment1.eip = '1559'
             sentiment1.unified_compound = 0.3
             
             sentiment2 = EIPSentiment()
-            sentiment2.job_id = analysis_job.id
+            sentiment2.job_id = job_id
             sentiment2.eip = '1559'
             sentiment2.unified_compound = 0.5
             
