@@ -489,6 +489,7 @@ def dashboard():
                          **dashboard_stats)
 
 @app.route('/api/export/dashboard/<job_id>')
+@require_admin
 def export_dashboard_data(job_id):
     """Export dashboard data as CSV"""
     from models import AnalysisJob, EIPSentiment
