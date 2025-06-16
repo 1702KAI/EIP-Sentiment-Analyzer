@@ -1,4 +1,0 @@
-paragraphs,headings,unordered_lists,topic,compound,pos,neu,neg
-"Test paragraph about EIP-1","EIP-1 Heading","- Item 1","eip-1",0.5,0.7,0.2,0.1
-"Another paragraph about ERC-20","ERC-20 Token","- Feature 1","erc-20",0.3,0.6,0.3,0.1
-"Discussion about EIP-721","NFT Standard","- Property 1","eip-721",-0.2,0.4,0.5,0.1
