@@ -172,8 +172,11 @@ class TestEIPSentimentModel:
     def test_negative_sentiment_filtering(self, test_app, eip_sentiment_data, analysis_job):
         """Test filtering EIPs with negative sentiment"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             negative_eips = EIPSentiment.query.filter(
-                EIPSentiment.job_id == analysis_job.id,
+                EIPSentiment.job_id == job_id,
                 EIPSentiment.unified_compound < 0
             ).all()
             
@@ -186,8 +189,11 @@ class TestOutputFileModel:
     def test_output_file_creation(self, test_app, analysis_job):
         """Test creating output file records"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             output_file = OutputFile()
-            output_file.job_id = analysis_job.id
+            output_file.job_id = job_id
             output_file.filename = 'stage1_output.csv'
             output_file.file_path = '/path/to/stage1_output.csv'
             output_file.file_type = 'csv'
@@ -197,7 +203,7 @@ class TestOutputFileModel:
             db.session.commit()
             
             retrieved_file = OutputFile.query.filter_by(
-                job_id=analysis_job.id,
+                job_id=job_id,
                 filename='stage1_output.csv'
             ).first()
             
@@ -208,10 +214,13 @@ class TestOutputFileModel:
     def test_job_output_relationship(self, test_app, analysis_job):
         """Test relationship between jobs and output files"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             # Create multiple output files for the job
             for i in range(3):
                 output_file = OutputFile()
-                output_file.job_id = analysis_job.id
+                output_file.job_id = job_id
                 output_file.filename = f'output_{i}.csv'
                 output_file.file_path = f'/path/to/output_{i}.csv'
                 output_file.file_type = 'csv'
@@ -221,14 +230,14 @@ class TestOutputFileModel:
             db.session.commit()
             
             # Test relationship
-            job = AnalysisJob.query.get(analysis_job.id)
+            job = AnalysisJob.query.get(job_id)
             assert len(job.output_files) == 3
             
             # Test cascading delete
             db.session.delete(job)
             db.session.commit()
             
-            remaining_files = OutputFile.query.filter_by(job_id=analysis_job.id).all()
+            remaining_files = OutputFile.query.filter_by(job_id=job_id).all()
             assert len(remaining_files) == 0  # Should be deleted due to cascade
 
 
