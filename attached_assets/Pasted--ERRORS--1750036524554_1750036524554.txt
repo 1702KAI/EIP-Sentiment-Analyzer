@@ -1,0 +1,41 @@
+
+================================================= ERRORS ==================================================
+__________________________________ ERROR collecting tests/test_routes.py __________________________________
+tests/test_routes.py:11: in <module>
+    from models import User, AnalysisJob, EIPSentiment
+models.py:10: in <module>
+    class User(UserMixin, db.Model):
+.pythonlibs/lib/python3.11/site-packages/flask_sqlalchemy/model.py:124: in __init_subclass__
+    super().__init_subclass__(**kwargs)
+.pythonlibs/lib/python3.11/site-packages/flask_sqlalchemy/model.py:214: in __init_subclass__
+    super().__init_subclass__(**kwargs)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/decl_api.py:842: in __init_subclass__
+    _as_declarative(cls._sa_registry, cls, cls.__dict__)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/decl_base.py:244: in _as_declarative
+    return _MapperConfig.setup_mapping(registry, cls, dict_, None, {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/decl_base.py:325: in setup_mapping
+    return _ClassScanMapperConfig(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/decl_base.py:576: in __init__
+    self._setup_table(table)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/decl_base.py:1755: in _setup_table
+    table_cls(
+.pythonlibs/lib/python3.11/site-packages/flask_sqlalchemy/model.py:242: in __table_cls__
+    return sa.Table(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in __new__
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/schema.py:429: in __new__
+    return cls._new(*args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/schema.py:461: in _new
+    raise exc.InvalidRequestError(
+E   sqlalchemy.exc.InvalidRequestError: Table 'users' is already defined for this MetaData instance.  Specify 'extend_existing=True' to redefine options and columns on an existing Table object.
+========================================= short test summary info =========================================
+ERROR tests/test_routes.py - sqlalchemy.exc.InvalidRequestError: Table 'users' is already defined for this MetaData instance.  Spec...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================================ 1 error in 0.44s =============================================
+~/workspace$ 
