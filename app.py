@@ -75,51 +75,9 @@ def require_admin(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Initialize database tables
+# Initialize database tables after app configuration
 with app.app_context():
     import models
-    db.create_all()
-    id = db.Column(db.String(36), primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
-    original_filename = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.String(20), default='queued')
-    progress = db.Column(db.Integer, default=0)
-    stage = db.Column(db.String(255), default='Queued for processing...')
-    error_message = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    completed_at = db.Column(db.DateTime)
-    
-    output_files = db.relationship('OutputFile', backref='job', lazy=True, cascade='all, delete-orphan')
-
-class OutputFile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
-    filename = db.Column(db.String(255), nullable=False)
-    file_path = db.Column(db.String(500), nullable=False)
-    file_type = db.Column(db.String(50))
-    file_size = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class EIPSentiment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
-    eip = db.Column(db.String(10), nullable=False)
-    unified_compound = db.Column(db.Float)
-    unified_pos = db.Column(db.Float)
-    unified_neg = db.Column(db.Float)
-    unified_neu = db.Column(db.Float)
-    total_comment_count = db.Column(db.Integer)
-    category = db.Column(db.String(100))
-    status = db.Column(db.String(50))
-    title = db.Column(db.Text)
-    author = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    __table_args__ = (db.Index('idx_eip_job', 'eip', 'job_id'),)
-
-# Initialize database tables
-with app.app_context():
     db.create_all()
 
 def allowed_file(filename):
@@ -444,6 +402,7 @@ def results():
 @app.route('/dashboard')
 def dashboard():
     """Dashboard with sentiment analysis visualizations"""
+    from models import AnalysisJob, EIPSentiment
     # Get all completed jobs for selection
     jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
     
@@ -579,6 +538,7 @@ def export_dashboard_data(job_id):
 @app.route('/smart-contract')
 def smart_contract():
     """Smart Contract Generator page"""
+    from models import AnalysisJob, EIPSentiment
     # Get all completed jobs for selection
     jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
     
