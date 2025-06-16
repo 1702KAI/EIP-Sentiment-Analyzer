@@ -113,7 +113,7 @@ class TestFileUpload:
 class TestAPIEndpoints:
     """Test API endpoints for AJAX requests"""
 
-    @patch('app.EIPCodeGenerator')
+    @patch('smart_contract_generator.EIPCodeGenerator')
     def test_generate_contract_api(self, mock_generator, client, analysis_job, eip_sentiment_data):
         """Test smart contract generation API"""
         mock_instance = MagicMock()

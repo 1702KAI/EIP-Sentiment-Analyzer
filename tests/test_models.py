@@ -43,9 +43,12 @@ class TestUserModel:
             retrieved_admin = User.query.get('admin-456')
             assert retrieved_admin.is_admin is True
     
-    def test_user_string_representation(self, admin_user):
+    def test_user_string_representation(self, test_app, admin_user):
         """Test user string representation"""
-        assert admin_user.email in str(admin_user) or admin_user.id in str(admin_user)
+        with test_app.app_context():
+            db.session.add(admin_user)
+            user_str = str(admin_user)
+            assert admin_user.email in user_str or admin_user.id in user_str
 
 
 class TestAnalysisJobModel:
@@ -119,8 +122,11 @@ class TestEIPSentimentModel:
     def test_eip_sentiment_creation(self, test_app, analysis_job):
         """Test creating EIP sentiment data"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             sentiment = EIPSentiment()
-            sentiment.job_id = analysis_job.id
+            sentiment.job_id = job_id
             sentiment.eip = '20'
             sentiment.unified_compound = 0.5
             sentiment.unified_pos = 0.7
@@ -146,9 +152,12 @@ class TestEIPSentimentModel:
     def test_eip_sentiment_filtering(self, test_app, eip_sentiment_data, analysis_job):
         """Test filtering EIP sentiment data"""
         with test_app.app_context():
+            db.session.add(analysis_job)
+            job_id = analysis_job.id
+            
             # Filter by status
             final_eips = EIPSentiment.query.filter_by(
-                job_id=analysis_job.id, status='Final'
+                job_id=job_id, status='Final'
             ).all()
             
             assert len(final_eips) == 3  # All test data is Final status

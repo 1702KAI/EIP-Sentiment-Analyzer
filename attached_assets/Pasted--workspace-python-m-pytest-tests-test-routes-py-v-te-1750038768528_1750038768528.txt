@@ -1,0 +1,96 @@
+~/workspace$ python -m pytest tests/test_routes.py -v
+=========================================== test session starts ===========================================
+platform linux -- Python 3.11.10, pytest-8.4.0, pluggy-1.6.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pytest.ini
+plugins: anyio-4.9.0, Flask-Dance-7.1.0, cov-6.2.1, flask-1.3.0
+collected 18 items                                                                                        
+
+tests/test_routes.py::TestPublicRoutes::test_homepage_loads PASSED                                  [  5%]
+tests/test_routes.py::TestPublicRoutes::test_smart_contract_page_loads PASSED                       [ 11%]
+tests/test_routes.py::TestPublicRoutes::test_dashboard_loads PASSED                                 [ 16%]
+tests/test_routes.py::TestPublicRoutes::test_login_page_loads PASSED                                [ 22%]
+tests/test_routes.py::TestFileUpload::test_upload_without_login_redirects PASSED                    [ 27%]
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv PASSED                             [ 33%]
+tests/test_routes.py::TestFileUpload::test_upload_without_file PASSED                               [ 38%]
+tests/test_routes.py::TestFileUpload::test_upload_invalid_file_type PASSED                          [ 44%]
+tests/test_routes.py::TestAPIEndpoints::test_generate_contract_api FAILED                           [ 50%]
+tests/test_routes.py::TestAPIEndpoints::test_analyze_security_api PASSED                            [ 55%]
+tests/test_routes.py::TestAPIEndpoints::test_job_status_api PASSED                                  [ 61%]
+tests/test_routes.py::TestAPIEndpoints::test_job_status_invalid_id PASSED                           [ 66%]
+tests/test_routes.py::TestDashboardData::test_dashboard_with_data PASSED                            [ 72%]
+tests/test_routes.py::TestDashboardData::test_export_dashboard_data PASSED                          [ 77%]
+tests/test_routes.py::TestErrorHandling::test_404_handling PASSED                                   [ 83%]
+tests/test_routes.py::TestErrorHandling::test_invalid_job_id_download PASSED                        [ 88%]
+tests/test_routes.py::TestErrorHandling::test_api_without_json_data PASSED                          [ 94%]
+tests/test_routes.py::TestErrorHandling::test_api_with_invalid_json PASSED                          [100%]
+
+================================================ FAILURES =================================================
+_______________________________ TestAPIEndpoints.test_generate_contract_api _______________________________
+
+self = <test_routes.TestAPIEndpoints object at 0x7f80fe715b90>
+mock_generator = <MagicMock name='EIPCodeGenerator' id='140191997655312'>
+client = <FlaskClient <Flask 'app'>>, analysis_job = <AnalysisJob test-job-789>
+eip_sentiment_data = [<EIPSentiment 1>, <EIPSentiment 2>, <EIPSentiment 3>]
+
+    @patch('app.EIPCodeGenerator')
+    def test_generate_contract_api(self, mock_generator, client, analysis_job, eip_sentiment_data):
+        """Test smart contract generation API"""
+        mock_instance = MagicMock()
+        mock_instance.generate_eip_implementation.return_value = {
+            'success': True,
+            'contract_code': 'contract TestContract {}'
+        }
+        mock_generator.return_value = mock_instance
+    
+        with client.application.app_context():
+            # Refresh objects in the current session
+            db.session.add(analysis_job)
+            for item in eip_sentiment_data:
+                db.session.add(item)
+            job_id = analysis_job.id
+            eip_number = eip_sentiment_data[0].eip
+    
+        data = {
+            'job_id': job_id,
+            'eip_number': eip_number,
+            'contract_type': 'ERC20'
+        }
+    
+        response = client.post('/api/generate-contract',
+                             data=json.dumps(data),
+                             content_type='application/json')
+    
+        assert response.status_code == 200
+        response_data = json.loads(response.data)
+>       assert response_data['success'] is True
+E       assert False is True
+
+tests/test_routes.py:146: AssertionError
+============================================ warnings summary =============================================
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:93: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:359: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:235: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestAPIEndpoints::test_job_status_api
+  /home/runner/workspace/app.py:369: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestErrorHandling::test_invalid_job_id_download
+  /home/runner/workspace/app.py:385: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================================= short test summary info =========================================
+FAILED tests/test_routes.py::TestAPIEndpoints::test_generate_contract_api - assert False is True
+================================ 1 failed, 17 passed, 5 warnings in 13.80s ================================
+~/workspace$ 
