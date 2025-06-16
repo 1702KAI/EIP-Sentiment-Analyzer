@@ -12,7 +12,6 @@ from werkzeug.utils import secure_filename
 import pandas as pd
 from sentiment_analyzer import SentimentAnalyzer
 from smart_contract_generator import EIPCodeGenerator
-from models import User, AnalysisJob, OutputFile, EIPSentiment
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -59,6 +58,7 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 @login_manager.user_loader
 def load_user(user_id):
+    from models import User
     return db.session.get(User, user_id)
 
 def require_admin(f):
@@ -77,7 +77,7 @@ def require_admin(f):
 
 # Initialize database tables after app configuration
 with app.app_context():
-    import models
+    from models import User, AnalysisJob, OutputFile, EIPSentiment
     db.create_all()
 
 def allowed_file(filename):
@@ -88,6 +88,7 @@ def process_csv_background(job_id, filepath, output_dir):
     
     try:
         with app.app_context():
+            from models import AnalysisJob, OutputFile, EIPSentiment
             # Update job status to processing
             job = AnalysisJob.query.get(job_id)
             if not job:
@@ -259,6 +260,7 @@ def login_post():
     
     if email in admin_credentials and admin_credentials[email] == password:
         # Create or get user
+        from models import User
         user = User.query.filter_by(email=email).first()
         if not user:
             user = User(
@@ -325,6 +327,7 @@ def upload_file():
             return redirect(request.url)
         
         # Create job in database
+        from models import AnalysisJob
         job_id = str(uuid.uuid4())
         output_dir = os.path.join(app.config['OUTPUT_FOLDER'], job_id)
         os.makedirs(output_dir, exist_ok=True)
@@ -352,7 +355,7 @@ def upload_file():
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
-    
+    from models import AnalysisJob
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -362,7 +365,7 @@ def job_status(job_id):
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
-    
+    from models import AnalysisJob
     job = AnalysisJob.query.get(job_id)
     if not job:
         return jsonify({'error': 'Job not found'}), 404
@@ -378,7 +381,7 @@ def api_job_status(job_id):
 
 @app.route('/download/<job_id>/<filename>')
 def download_file(job_id, filename):
-    
+    from models import AnalysisJob, OutputFile
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -394,9 +397,9 @@ def download_file(job_id, filename):
 @app.route('/results')
 @require_admin
 def results():
-    
+    from models import AnalysisJob
     # Show all completed jobs
-    completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
+    completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
     return render_template('results.html', jobs=completed_jobs)
 
 @app.route('/dashboard')
@@ -488,6 +491,7 @@ def dashboard():
 @app.route('/api/export/dashboard/<job_id>')
 def export_dashboard_data(job_id):
     """Export dashboard data as CSV"""
+    from models import AnalysisJob, EIPSentiment
     job = AnalysisJob.query.get_or_404(job_id)
     sentiment_data = EIPSentiment.query.filter_by(job_id=job_id).all()
     
@@ -577,6 +581,7 @@ def generate_contract():
             return jsonify({'success': False, 'error': 'Missing required parameters'})
         
         # Get EIP data from database
+        from models import EIPSentiment
         eip_data_obj = EIPSentiment.query.filter_by(job_id=job_id, eip=eip_number).first()
         
         if not eip_data_obj:
@@ -674,6 +679,7 @@ def analyze_code_and_recommend():
             return jsonify({'success': False, 'error': 'Job ID is required'})
         
         # Get EIP data based on status filter
+        from models import EIPSentiment
         query = EIPSentiment.query.filter_by(job_id=job_id)
         
         if eip_status_filter == 'final_only':
