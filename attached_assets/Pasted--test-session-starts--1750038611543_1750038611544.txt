@@ -1,0 +1,370 @@
+=========================================== test session starts ===========================================
+platform linux -- Python 3.11.10, pytest-8.4.0, pluggy-1.6.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pytest.ini
+plugins: anyio-4.9.0, Flask-Dance-7.1.0, cov-6.2.1, flask-1.3.0
+collected 18 items                                                                                        
+
+tests/test_routes.py::TestPublicRoutes::test_homepage_loads PASSED                                  [  5%]
+tests/test_routes.py::TestPublicRoutes::test_smart_contract_page_loads PASSED                       [ 11%]
+tests/test_routes.py::TestPublicRoutes::test_dashboard_loads PASSED                                 [ 16%]
+tests/test_routes.py::TestPublicRoutes::test_login_page_loads PASSED                                [ 22%]
+tests/test_routes.py::TestFileUpload::test_upload_without_login_redirects PASSED                    [ 27%]
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv PASSED                             [ 33%]
+tests/test_routes.py::TestFileUpload::test_upload_without_file PASSED                               [ 38%]
+tests/test_routes.py::TestFileUpload::test_upload_invalid_file_type PASSED                          [ 44%]
+tests/test_routes.py::TestAPIEndpoints::test_generate_contract_api FAILED                           [ 50%]
+tests/test_routes.py::TestAPIEndpoints::test_analyze_security_api PASSED                            [ 55%]
+tests/test_routes.py::TestAPIEndpoints::test_job_status_api PASSED                                  [ 61%]
+tests/test_routes.py::TestAPIEndpoints::test_job_status_invalid_id PASSED                           [ 66%]
+tests/test_routes.py::TestDashboardData::test_dashboard_with_data PASSED                            [ 72%]
+tests/test_routes.py::TestDashboardData::test_export_dashboard_data FAILED                          [ 77%]
+tests/test_routes.py::TestErrorHandling::test_404_handling PASSED                                   [ 83%]
+tests/test_routes.py::TestErrorHandling::test_invalid_job_id_download PASSED                        [ 88%]
+tests/test_routes.py::TestErrorHandling::test_api_without_json_data FAILED                          [ 94%]
+tests/test_routes.py::TestErrorHandling::test_api_with_invalid_json FAILED                          [100%]
+
+================================================ FAILURES =================================================
+_______________________________ TestAPIEndpoints.test_generate_contract_api _______________________________
+
+self = <sqlalchemy.orm.session.Session object at 0x7f0ba6914890>
+instance = [<EIPSentiment 1>, <EIPSentiment 2>, <EIPSentiment 3>], _warn = True
+
+    def add(self, instance: object, _warn: bool = True) -> None:
+        """Place an object into this :class:`_orm.Session`.
+    
+        Objects that are in the :term:`transient` state when passed to the
+        :meth:`_orm.Session.add` method will move to the
+        :term:`pending` state, until the next flush, at which point they
+        will move to the :term:`persistent` state.
+    
+        Objects that are in the :term:`detached` state when passed to the
+        :meth:`_orm.Session.add` method will move to the :term:`persistent`
+        state directly.
+    
+        If the transaction used by the :class:`_orm.Session` is rolled back,
+        objects which were transient when they were passed to
+        :meth:`_orm.Session.add` will be moved back to the
+        :term:`transient` state, and will no longer be present within this
+        :class:`_orm.Session`.
+    
+        .. seealso::
+    
+            :meth:`_orm.Session.add_all`
+    
+            :ref:`session_adding` - at :ref:`session_basics`
+    
+        """
+        if _warn and self._warn_on_events:
+            self._flush_warning("Session.add()")
+    
+        try:
+>           state = attributes.instance_state(instance)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'list' object has no attribute '_sa_instance_state'
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:3477: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+self = <test_routes.TestAPIEndpoints object at 0x7f0ba7216410>
+mock_generator = <MagicMock name='EIPCodeGenerator' id='139688020635216'>
+client = <FlaskClient <Flask 'app'>>, analysis_job = <AnalysisJob test-job-789>
+eip_sentiment_data = [<EIPSentiment 1>, <EIPSentiment 2>, <EIPSentiment 3>]
+
+    @patch('app.EIPCodeGenerator')
+    def test_generate_contract_api(self, mock_generator, client, analysis_job, eip_sentiment_data):
+        """Test smart contract generation API"""
+        mock_instance = MagicMock()
+        mock_instance.generate_eip_implementation.return_value = {
+            'success': True,
+            'contract_code': 'contract TestContract {}'
+        }
+        mock_generator.return_value = mock_instance
+    
+        with client.application.app_context():
+            # Refresh objects in the current session
+            db.session.add(analysis_job)
+>           db.session.add(eip_sentiment_data)
+
+tests/test_routes.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:380: in add
+    return self._proxied.add(instance, _warn=_warn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.orm.session.Session object at 0x7f0ba6914890>
+instance = [<EIPSentiment 1>, <EIPSentiment 2>, <EIPSentiment 3>], _warn = True
+
+    def add(self, instance: object, _warn: bool = True) -> None:
+        """Place an object into this :class:`_orm.Session`.
+    
+        Objects that are in the :term:`transient` state when passed to the
+        :meth:`_orm.Session.add` method will move to the
+        :term:`pending` state, until the next flush, at which point they
+        will move to the :term:`persistent` state.
+    
+        Objects that are in the :term:`detached` state when passed to the
+        :meth:`_orm.Session.add` method will move to the :term:`persistent`
+        state directly.
+    
+        If the transaction used by the :class:`_orm.Session` is rolled back,
+        objects which were transient when they were passed to
+        :meth:`_orm.Session.add` will be moved back to the
+        :term:`transient` state, and will no longer be present within this
+        :class:`_orm.Session`.
+    
+        .. seealso::
+    
+            :meth:`_orm.Session.add_all`
+    
+            :ref:`session_adding` - at :ref:`session_basics`
+    
+        """
+        if _warn and self._warn_on_events:
+            self._flush_warning("Session.add()")
+    
+        try:
+            state = attributes.instance_state(instance)
+        except exc.NO_STATE as err:
+>           raise exc.UnmappedInstanceError(instance) from err
+E           sqlalchemy.orm.exc.UnmappedInstanceError: Class 'builtins.list' is not mapped
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:3479: UnmappedInstanceError
+______________________________ TestDashboardData.test_export_dashboard_data _______________________________
+
+self = <test_routes.TestDashboardData object at 0x7f0ba7215710>, client = <FlaskClient <Flask 'app'>>
+admin_user = <User test-admin-123>
+eip_sentiment_data = [<EIPSentiment 1>, <EIPSentiment 2>, <EIPSentiment 3>]
+analysis_job = <AnalysisJob test-job-789>
+
+    def test_export_dashboard_data(self, client, admin_user, eip_sentiment_data, analysis_job):
+        """Test dashboard data export requires admin authentication"""
+        with client.application.app_context():
+>           job_id = analysis_job.id
+                     ^^^^^^^^^^^^^^^
+
+tests/test_routes.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py:566: in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py:1086: in get
+    value = self._fire_loader_callables(state, key, passive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py:1116: in _fire_loader_callables
+    return state._load_expired(state, passive)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state.py:803: in _load_expired
+    self.manager.expired_attribute_loader(self, toload, passive)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+mapper = <Mapper at 0x7f0ba74e56d0; AnalysisJob>
+state = <sqlalchemy.orm.state.InstanceState object at 0x7f0ba5156db0>
+attribute_names = {'completed_at', 'created_at', 'error_message', 'filename', 'id', 'original_filename', ...}
+passive = symbol('PASSIVE_OFF')
+
+    def load_scalar_attributes(mapper, state, attribute_names, passive):
+        """initiate a column-based attribute refresh operation."""
+    
+        # assert mapper is _state_mapper(state)
+        session = state.session
+        if not session:
+>           raise orm_exc.DetachedInstanceError(
+                "Instance %s is not bound to a Session; "
+                "attribute refresh operation cannot proceed" % (state_str(state))
+            )
+E           sqlalchemy.orm.exc.DetachedInstanceError: Instance <AnalysisJob at 0x7f0ba6dd8fd0> is not bound to a Session; attribute refresh operation cannot proceed (Background on this error at: https://sqlalche.me/e/20/bhk3)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/loading.py:1603: DetachedInstanceError
+______________________________ TestErrorHandling.test_api_without_json_data _______________________________
+
+self = <test_routes.TestErrorHandling object at 0x7f0ba721cc10>, client = <FlaskClient <Flask 'app'>>
+
+    def test_api_without_json_data(self, client):
+        """Test API endpoints without JSON data"""
+        response = client.post('/api/generate-contract')
+>       assert response.status_code == 400 or response.status_code == 500
+E       assert (200 == 400 or 200 == 500)
+E        +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E        +  and   200 = <WrapperTestResponse streamed [200 OK]>.status_code
+
+tests/test_routes.py:237: AssertionError
+------------------------------------------ Captured stderr call -------------------------------------------
+ERROR:root:Contract generation error: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
+-------------------------------------------- Captured log call --------------------------------------------
+ERROR    root:app.py:609 Contract generation error: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
+______________________________ TestErrorHandling.test_api_with_invalid_json _______________________________
+
+self = <test_routes.TestErrorHandling object at 0x7f0ba721d050>, client = <FlaskClient <Flask 'app'>>
+
+    def test_api_with_invalid_json(self, client):
+        """Test API endpoints with invalid JSON"""
+        response = client.post('/api/generate-contract',
+                             data='invalid json',
+                             content_type='application/json')
+>       assert response.status_code == 400 or response.status_code == 500
+E       assert (200 == 400 or 200 == 500)
+E        +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E        +  and   200 = <WrapperTestResponse streamed [200 OK]>.status_code
+
+tests/test_routes.py:244: AssertionError
+------------------------------------------ Captured stderr call -------------------------------------------
+ERROR:root:Contract generation error: 400 Bad Request: The browser (or proxy) sent a request that this server could not understand.
+-------------------------------------------- Captured log call --------------------------------------------
+ERROR    root:app.py:609 Contract generation error: 400 Bad Request: The browser (or proxy) sent a request that this server could not understand.
+============================================ warnings summary =============================================
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:93: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:359: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestFileUpload::test_upload_with_valid_csv
+  /home/runner/workspace/app.py:235: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestFileUpload::test_upload_without_file
+  /home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-1 (process_csv_background)
+  
+  Traceback (most recent call last):
+    File "/home/runner/workspace/app.py", line 109, in process_csv_background
+      stage1_output = analyzer.run_stage1(filepath, output_dir)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/sentiment_analyzer.py", line 48, in run_stage1
+      grouped_eip = df.dropna(subset=["eip"]).groupby("eip").agg({
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/groupby/generic.py", line 1432, in aggregate
+      result = op.agg()
+               ^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/apply.py", line 190, in agg
+      return self.agg_dict_like()
+             ^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/apply.py", line 423, in agg_dict_like
+      return self.agg_or_apply_dict_like(op_name="agg")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/apply.py", line 1603, in agg_or_apply_dict_like
+      result_index, result_data = self.compute_dict_like(
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/apply.py", line 496, in compute_dict_like
+      results = [
+                ^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/apply.py", line 497, in <listcomp>
+      getattr(obj._gotitem(key, ndim=1), op_name)(how, **kwargs)
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/groupby/generic.py", line 249, in aggregate
+      return getattr(self, func)(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/groupby/groupby.py", line 2452, in mean
+      result = self._cython_agg_general(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/groupby/groupby.py", line 1999, in _cython_agg_general
+      res = self._wrap_agged_manager(new_mgr)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/groupby/generic.py", line 157, in _wrap_agged_manager
+      out._name = self.obj.name
+                  ^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/pandas/core/generic.py", line 6318, in __getattr__
+      return object.__getattribute__(self, name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  AttributeError: 'DataFrame' object has no attribute 'name'
+  
+  During handling of the above exception, another exception occurred:
+  
+  Traceback (most recent call last):
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+      self.dialect.do_execute(
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+      cursor.execute(statement, parameters)
+  psycopg2.errors.UndefinedTable: relation "analysis_job" does not exist
+  LINE 2: FROM analysis_job 
+               ^
+  
+  
+  The above exception was the direct cause of the following exception:
+  
+  Traceback (most recent call last):
+    File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+      self.run()
+    File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/threading.py", line 982, in run
+      self._target(*self._args, **self._kwargs)
+    File "/home/runner/workspace/app.py", line 235, in process_csv_background
+      job = AnalysisJob.query.get(job_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "<string>", line 2, in get
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+      return fn(*args, **kwargs)  # type: ignore[no-any-return]
+             ^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+      return self._get_impl(ident, loading.load_on_pk_identity)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+      return self.session._get_impl(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3873, in _get_impl
+      return db_load_fn(
+             ^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 694, in load_on_pk_identity
+      session.execute(
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+      return self._execute_internal(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+      result: Result[Any] = compile_state_cls.orm_execute_statement(
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+      result = conn.execute(
+               ^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+      return meth(
+             ^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+      return connection._execute_clauseelement(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+      ret = self._execute_context(
+            ^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+      return self._exec_single_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+      self._handle_dbapi_exception(
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+      self.dialect.do_execute(
+    File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+      cursor.execute(statement, parameters)
+  sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation "analysis_job" does not exist
+  LINE 2: FROM analysis_job 
+               ^
+  
+  [SQL: SELECT analysis_job.id AS analysis_job_id, analysis_job.filename AS analysis_job_filename, analysis_job.original_filename AS analysis_job_original_filename, analysis_job.status AS analysis_job_status, analysis_job.progress AS analysis_job_progress, analysis_job.stage AS analysis_job_stage, analysis_job.error_message AS analysis_job_error_message, analysis_job.created_at AS analysis_job_created_at, analysis_job.updated_at AS analysis_job_updated_at, analysis_job.completed_at AS analysis_job_completed_at 
+  FROM analysis_job 
+  WHERE analysis_job.id = %(pk_1)s]
+  [parameters: {'pk_1': '9936ace1-cb00-494f-aff2-2ceac28f3e7e'}]
+  (Background on this error at: https://sqlalche.me/e/20/f405)
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/test_routes.py::TestAPIEndpoints::test_job_status_api
+  /home/runner/workspace/app.py:369: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+tests/test_routes.py::TestErrorHandling::test_invalid_job_id_download
+  /home/runner/workspace/app.py:385: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    job = AnalysisJob.query.get(job_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================================= short test summary info =========================================
+FAILED tests/test_routes.py::TestAPIEndpoints::test_generate_contract_api - sqlalchemy.orm.exc.UnmappedInstanceError: Class 'builtins.list' is not mapped
+FAILED tests/test_routes.py::TestDashboardData::test_export_dashboard_data - sqlalchemy.orm.exc.DetachedInstanceError: Instance <AnalysisJob at 0x7f0ba6dd8fd0> is not bound to a S...
+FAILED tests/test_routes.py::TestErrorHandling::test_api_without_json_data - assert (200 == 400 or 200 == 500)
+FAILED tests/test_routes.py::TestErrorHandling::test_api_with_invalid_json - assert (200 == 400 or 200 == 500)
+================================ 4 failed, 14 passed, 6 warnings in 14.24s ================================
+~/workspace$ 
