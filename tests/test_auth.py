@@ -67,25 +67,43 @@ class TestAuthorization:
         assert response.status_code == 200
         assert b'Please log in' in response.data or b'Admin Login' in response.data
     
-    def test_admin_can_access_upload(self, client, admin_user, test_app):
+    def test_admin_can_access_upload(self, client, test_app):
         """Test that authenticated admin can access upload page"""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = admin_user.id
-            sess['_fresh'] = True
-        
-        response = client.get('/upload')
-        assert response.status_code == 200
-        assert b'Upload CSV' in response.data
+        with test_app.app_context():
+            # Create admin user within the test context
+            admin = User()
+            admin.id = 'test-admin-upload'
+            admin.email = 'admin@upload.test'
+            admin.is_admin = True
+            db.session.add(admin)
+            db.session.commit()
+            
+            with client.session_transaction() as sess:
+                sess['_user_id'] = admin.id
+                sess['_fresh'] = True
+            
+            response = client.get('/upload')
+            assert response.status_code == 200
+            assert b'Upload CSV' in response.data
     
-    def test_admin_can_access_results(self, client, admin_user, test_app):
+    def test_admin_can_access_results(self, client, test_app):
         """Test that authenticated admin can access results page"""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = admin_user.id
-            sess['_fresh'] = True
-        
-        response = client.get('/results')
-        assert response.status_code == 200
-        assert b'Analysis Results' in response.data or b'completed jobs' in response.data
+        with test_app.app_context():
+            # Create admin user within the test context
+            admin = User()
+            admin.id = 'test-admin-results'
+            admin.email = 'admin@results.test'
+            admin.is_admin = True
+            db.session.add(admin)
+            db.session.commit()
+            
+            with client.session_transaction() as sess:
+                sess['_user_id'] = admin.id
+                sess['_fresh'] = True
+            
+            response = client.get('/results')
+            assert response.status_code == 200
+            assert b'Analysis Results' in response.data or b'completed jobs' in response.data
     
     def test_public_can_access_homepage(self, client):
         """Test that homepage is publicly accessible"""

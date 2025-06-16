@@ -42,30 +42,34 @@ def runner(test_app):
 def admin_user(test_app):
     """Create an admin user for testing"""
     with test_app.app_context():
-        admin = User(
-            id='test-admin-123',
-            email='admin@test.com',
-            first_name='Test',
-            last_name='Admin',
-            is_admin=True
-        )
+        admin = User()
+        admin.id = 'test-admin-123'
+        admin.email = 'admin@test.com'
+        admin.first_name = 'Test'
+        admin.last_name = 'Admin'
+        admin.is_admin = True
         db.session.add(admin)
         db.session.commit()
+        
+        # Detach from session to avoid DetachedInstanceError
+        db.session.expunge(admin)
         return admin
 
 @pytest.fixture
 def regular_user(test_app):
     """Create a regular user for testing"""
     with test_app.app_context():
-        user = User(
-            id='test-user-456',
-            email='user@test.com',
-            first_name='Test',
-            last_name='User',
-            is_admin=False
-        )
+        user = User()
+        user.id = 'test-user-456'
+        user.email = 'user@test.com'
+        user.first_name = 'Test'
+        user.last_name = 'User'
+        user.is_admin = False
         db.session.add(user)
         db.session.commit()
+        
+        # Detach from session to avoid DetachedInstanceError
+        db.session.expunge(user)
         return user
 
 @pytest.fixture
