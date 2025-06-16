@@ -4,7 +4,8 @@ Authentication and authorization tests for EIP Sentiment Analyzer
 
 import pytest
 from flask import url_for
-from app import User, db
+from app import app, db
+from models import User
 
 
 class TestAuthentication:

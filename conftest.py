@@ -5,7 +5,8 @@ Pytest configuration and fixtures for EIP Sentiment Analyzer tests
 import pytest
 import tempfile
 import os
-from app import app, db, User, AnalysisJob, EIPSentiment, OutputFile
+from app import app, db
+from models import User, AnalysisJob, EIPSentiment, OutputFile
 from werkzeug.datastructures import FileStorage
 from io import BytesIO
 

@@ -4,7 +4,8 @@ Database model tests for EIP Sentiment Analyzer
 
 import pytest
 from datetime import datetime
-from app import User, AnalysisJob, EIPSentiment, OutputFile, db
+from app import app, db
+from models import User, AnalysisJob, EIPSentiment, OutputFile
 
 
 class TestUserModel:
