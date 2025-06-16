@@ -122,7 +122,7 @@ def eip_sentiment_data(test_app, analysis_job):
         sentiment_data.append(eip1)
         
         eip20 = EIPSentiment()
-        eip20.job_id = job.id
+        eip20.job_id = analysis_job.id
         eip20.eip = '20'
         eip20.unified_compound = 0.3
         eip20.unified_pos = 0.6
@@ -136,7 +136,7 @@ def eip_sentiment_data(test_app, analysis_job):
         sentiment_data.append(eip20)
         
         eip721 = EIPSentiment()
-        eip721.job_id = job.id
+        eip721.job_id = analysis_job.id
         eip721.eip = '721'
         eip721.unified_compound = -0.1
         eip721.unified_pos = 0.4
