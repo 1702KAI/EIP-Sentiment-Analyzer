@@ -66,9 +66,10 @@ Make sure the contract is complete and deployable.
 
             return {
                 "success": True,
+                "contract_code": generated_code,  # Expected by tests
+                "generated_code": generated_code,
                 "eip_number": eip_data.get('eip', 'N/A'),
                 "contract_type": contract_type,
-                "generated_code": generated_code,
                 "eip_metadata": eip_data
             }
 
@@ -85,6 +86,13 @@ Make sure the contract is complete and deployable.
         """
         AI-powered security analysis of smart contract code
         """
+        # Validate input
+        if not contract_code or not contract_code.strip():
+            return {
+                "success": False,
+                "error": "Contract code cannot be empty"
+            }
+        
         try:
             analysis_prompt = f"""
 Analyze this Solidity smart contract for security vulnerabilities, gas optimization opportunities, and best practices:
@@ -248,6 +256,7 @@ Focus on EIPs that are actually implemented or could be implemented by this code
             return {
                 "success": True,
                 "analysis": analysis_text,
+                "recommendations": eip_recs,  # Expected by tests
                 "eip_recommendations": eip_recs
             }
 
