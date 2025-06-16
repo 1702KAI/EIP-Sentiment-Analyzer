@@ -324,10 +324,21 @@ class SentimentAnalyzer:
                 except Exception as e:
                     logging.error(f"❌ Failed to process reviewer data: {e}")
             
-            # Merge all data
+            # Merge all data - handle different column naming conventions
             merged_df = sentiment_df.copy() if not sentiment_df.empty else pd.DataFrame()
             
-            if not status_meta_df.empty and not merged_df.empty:
+            # Standardize column names for merging
+            if not merged_df.empty:
+                if 'eip_erc_numbers' in merged_df.columns and 'eip' not in merged_df.columns:
+                    merged_df['eip'] = merged_df['eip_erc_numbers'].astype(str)
+                elif 'eip' in merged_df.columns:
+                    merged_df['eip'] = merged_df['eip'].astype(str)
+            
+            if not status_meta_df.empty:
+                if 'eip' in status_meta_df.columns:
+                    status_meta_df['eip'] = status_meta_df['eip'].astype(str)
+            
+            if not status_meta_df.empty and not merged_df.empty and 'eip' in merged_df.columns:
                 merged_df = pd.merge(merged_df, status_meta_df, on="eip", how="outer")
             
             if not review_counts.empty and not merged_df.empty:

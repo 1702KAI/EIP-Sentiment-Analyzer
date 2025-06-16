@@ -1,0 +1,74 @@
+~/workspace$ python -m pytest tests/test_sentiment_analyzer.py -v
+=========================================== test session starts ===========================================
+platform linux -- Python 3.11.10, pytest-8.4.0, pluggy-1.6.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pytest.ini
+plugins: anyio-4.9.0, Flask-Dance-7.1.0, cov-6.2.1, flask-1.3.0
+collected 10 items                                                                                        
+
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_analyzer_initialization PASSED        [ 10%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage1_processing PASSED              [ 20%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage2_eips_data_fetch PASSED         [ 30%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage3_data_merging FAILED            [ 40%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_eip_number_extraction PASSED   [ 50%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_sentiment_aggregation PASSED   [ 60%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisHelpers::test_data_validation PASSED         [ 70%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_full_pipeline_integration PASSED [ 80%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_error_handling_missing_files PASSED [ 90%]
+tests/test_sentiment_analyzer.py::TestSentimentAnalysisIntegration::test_error_handling_invalid_csv PASSED [100%]
+
+================================================ FAILURES =================================================
+_____________________________ TestSentimentAnalyzer.test_stage3_data_merging ______________________________
+
+self = <test_sentiment_analyzer.TestSentimentAnalyzer object at 0x7fc302584150>
+
+    def test_stage3_data_merging(self):
+        """Test stage 3 data merging and final output"""
+        with tempfile.TemporaryDirectory() as output_dir:
+            # Create mock stage1 and stage2 outputs
+            stage1_data = {
+                'eip_erc_numbers': ['1', '20'],
+                'compound': [0.5, 0.3],
+                'pos': [0.7, 0.6],
+                'neu': [0.2, 0.3],
+                'neg': [0.1, 0.1],
+                'comment_count': [10, 15]
+            }
+    
+            stage2_data = {
+                'eip': [1, 20],
+                'title': ['EIP-1: Purpose', 'EIP-20: Token'],
+                'status': ['Living', 'Final'],
+                'category': ['Core', 'ERC'],
+                'author': ['Martin Becze', 'Fabian Vogelsteller']
+            }
+    
+            stage1_df = pd.DataFrame(stage1_data)
+            stage2_df = pd.DataFrame(stage2_data)
+    
+            stage1_file = os.path.join(output_dir, 'aggregated_sentiment_with_eip_erc.csv')
+            stage2_file = os.path.join(output_dir, 'eips_data.csv')
+    
+            stage1_df.to_csv(stage1_file, index=False)
+            stage2_df.to_csv(stage2_file, index=False)
+    
+            analyzer = SentimentAnalyzer()
+            result = analyzer.run_stage3(output_dir)
+    
+>           assert result is not None
+E           assert None is not None
+
+tests/test_sentiment_analyzer.py:124: AssertionError
+------------------------------------------ Captured stderr call -------------------------------------------
+INFO:root:✅ VADER sentiment analyzer initialized
+INFO:root:🔗 Starting Stage 3: Final data merging...
+ERROR:root:❌ Stage 3 failed: 'eip'
+-------------------------------------------- Captured log call --------------------------------------------
+INFO     root:sentiment_analyzer.py:17 ✅ VADER sentiment analyzer initialized
+INFO     root:sentiment_analyzer.py:260 🔗 Starting Stage 3: Final data merging...
+ERROR    root:sentiment_analyzer.py:403 ❌ Stage 3 failed: 'eip'
+========================================= short test summary info =========================================
+FAILED tests/test_sentiment_analyzer.py::TestSentimentAnalyzer::test_stage3_data_merging - assert None is not None
+======================================= 1 failed, 9 passed in 0.69s =======================================
+~/workspace$ 
