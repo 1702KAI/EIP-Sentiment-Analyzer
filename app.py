@@ -295,7 +295,6 @@ def upload_page():
 @app.route('/upload', methods=['POST'])
 @require_admin
 def upload_file():
-    
     if 'file' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.url)
@@ -305,7 +304,11 @@ def upload_file():
         flash('No file selected', 'error')
         return redirect(request.url)
     
-    if file and file.filename and allowed_file(file.filename):
+    if not (file and file.filename and allowed_file(file.filename)):
+        flash('Invalid file type. Please upload a CSV file.', 'error')
+        return redirect(request.url)
+    
+    try:
         filename = secure_filename(str(file.filename))
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_filename = f"{timestamp}_{filename}"
@@ -323,7 +326,8 @@ def upload_file():
                 return redirect(request.url)
         except Exception as e:
             flash(f'Error reading CSV file: {str(e)}', 'error')
-            os.remove(filepath)
+            if os.path.exists(filepath):
+                os.remove(filepath)
             return redirect(request.url)
         
         # Create job in database
@@ -349,9 +353,10 @@ def upload_file():
         
         flash('File uploaded successfully! Processing started.', 'success')
         return redirect(url_for('job_status', job_id=job_id))
-    
-    flash('Invalid file type. Please upload a CSV file.', 'error')
-    return redirect(request.url)
+        
+    except Exception as e:
+        flash(f'Upload failed: {str(e)}', 'error')
+        return redirect(request.url)
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
