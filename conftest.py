@@ -86,61 +86,77 @@ def sample_csv_file():
 def analysis_job(test_app):
     """Create a sample analysis job for testing"""
     with test_app.app_context():
-        job = AnalysisJob(
-            id='test-job-789',
-            filename='test.csv',
-            original_filename='test_upload.csv',
-            status='completed'
-        )
+        job = AnalysisJob()
+        job.id = 'test-job-789'
+        job.filename = 'test.csv'
+        job.original_filename = 'test_upload.csv'
+        job.status = 'completed'
+        job.progress = 100
         db.session.add(job)
         db.session.commit()
+        
+        # Detach from session to avoid DetachedInstanceError
+        db.session.expunge(job)
         return job
 
 @pytest.fixture
-def eip_sentiment_data(test_app, analysis_job):
+def eip_sentiment_data(test_app):
     """Create sample EIP sentiment data for testing"""
     with test_app.app_context():
-        sentiment_data = [
-            EIPSentiment(
-                job_id=analysis_job.id,
-                eip='1',
-                unified_compound=0.5,
-                unified_pos=0.7,
-                unified_neg=0.1,
-                unified_neu=0.2,
-                total_comment_count=100,
-                category='Core',
-                status='Final',
-                title='EIP-1: EIP Purpose and Guidelines',
-                author='Martin Becze, Hudson Jameson'
-            ),
-            EIPSentiment(
-                job_id=analysis_job.id,
-                eip='20',
-                unified_compound=0.3,
-                unified_pos=0.6,
-                unified_neg=0.2,
-                unified_neu=0.2,
-                total_comment_count=250,
-                category='ERC',
-                status='Final',
-                title='EIP-20: Token Standard',
-                author='Fabian Vogelsteller, Vitalik Buterin'
-            ),
-            EIPSentiment(
-                job_id=analysis_job.id,
-                eip='721',
-                unified_compound=-0.1,
-                unified_pos=0.4,
-                unified_neg=0.4,
-                unified_neu=0.2,
-                total_comment_count=180,
-                category='ERC',
-                status='Final',
-                title='EIP-721: Non-Fungible Token Standard',
-                author='William Entriken'
-            )
-        ]
+        # Create a job within this context
+        job = AnalysisJob()
+        job.id = 'sentiment-test-job'
+        job.filename = 'sentiment_test.csv'
+        job.original_filename = 'sentiment_data.csv'
+        job.status = 'completed'
+        job.progress = 100
+        db.session.add(job)
+        db.session.commit()
+        
+        sentiment_data = []
+        
+        # Create EIP sentiment records
+        eip1 = EIPSentiment()
+        eip1.job_id = job.id
+        eip1.eip = '1'
+        eip1.unified_compound = 0.5
+        eip1.unified_pos = 0.7
+        eip1.unified_neg = 0.1
+        eip1.unified_neu = 0.2
+        eip1.total_comment_count = 100
+        eip1.category = 'Core'
+        eip1.status = 'Final'
+        eip1.title = 'EIP-1: EIP Purpose and Guidelines'
+        eip1.author = 'Martin Becze, Hudson Jameson'
+        sentiment_data.append(eip1)
+        
+        eip20 = EIPSentiment()
+        eip20.job_id = job.id
+        eip20.eip = '20'
+        eip20.unified_compound = 0.3
+        eip20.unified_pos = 0.6
+        eip20.unified_neg = 0.2
+        eip20.unified_neu = 0.2
+        eip20.total_comment_count = 250
+        eip20.category = 'ERC'
+        eip20.status = 'Final'
+        eip20.title = 'EIP-20: Token Standard'
+        eip20.author = 'Fabian Vogelsteller, Vitalik Buterin'
+        sentiment_data.append(eip20)
+        
+        eip721 = EIPSentiment()
+        eip721.job_id = job.id
+        eip721.eip = '721'
+        eip721.unified_compound = -0.1
+        eip721.unified_pos = 0.4
+        eip721.unified_neg = 0.4
+        eip721.unified_neu = 0.2
+        eip721.total_comment_count = 180
+        eip721.category = 'ERC'
+        eip721.status = 'Final'
+        eip721.title = 'EIP-721: Non-Fungible Token Standard'
+        eip721.author = 'William Entriken'
+        sentiment_data.append(eip721)
         
         for sentiment in sentiment_data:
             db.session.add(sentiment)

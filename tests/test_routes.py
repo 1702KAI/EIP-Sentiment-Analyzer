@@ -49,18 +49,27 @@ class TestFileUpload:
         assert response.status_code == 302 or response.status_code == 200
         # Should redirect to login or show login form
     
-    def test_upload_with_valid_csv(self, client, admin_user, sample_csv_file):
+    def test_upload_with_valid_csv(self, client, test_app, sample_csv_file):
         """Test successful CSV upload with admin user"""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = admin_user.id
-            sess['_fresh'] = True
-        
-        data = {
-            'file': (sample_csv_file, 'test.csv')
-        }
-        
-        response = client.post('/upload', data=data, follow_redirects=True)
-        assert response.status_code == 200
+        with test_app.app_context():
+            # Create admin user within test context
+            admin = User()
+            admin.id = 'test-admin-csv'
+            admin.email = 'admin@csv.test'
+            admin.is_admin = True
+            db.session.add(admin)
+            db.session.commit()
+            
+            with client.session_transaction() as sess:
+                sess['_user_id'] = admin.id
+                sess['_fresh'] = True
+            
+            data = {
+                'file': (sample_csv_file, 'test.csv')
+            }
+            
+            response = client.post('/upload', data=data, follow_redirects=True)
+            assert response.status_code == 200
     
     def test_upload_without_file(self, client, admin_user):
         """Test upload without selecting a file"""
