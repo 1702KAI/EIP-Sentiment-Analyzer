@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 import pandas as pd
 from sentiment_analyzer import SentimentAnalyzer
 from smart_contract_generator import EIPCodeGenerator
+from models import User, AnalysisJob, OutputFile, EIPSentiment
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -58,8 +59,7 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 @login_manager.user_loader
 def load_user(user_id):
-    from models import User
-    return User.query.get(user_id)
+    return db.session.get(User, user_id)
 
 def require_admin(f):
     @wraps(f)
@@ -565,6 +565,9 @@ def generate_contract():
     """Generate smart contract code using OpenAI"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
         job_id = data.get('job_id')
         eip_number = data.get('eip_number')
         contract_type = data.get('contract_type')
@@ -605,6 +608,9 @@ def analyze_security():
     """Analyze smart contract security using OpenAI"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
         contract_code = data.get('contract_code')
         
         if not contract_code:
@@ -627,6 +633,9 @@ def generate_tests():
     """Generate test suite for smart contract using OpenAI"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
         contract_code = data.get('contract_code')
         contract_name = data.get('contract_name', 'Contract')
         
@@ -650,6 +659,9 @@ def analyze_code_and_recommend():
     """Analyze smart contract code and recommend EIPs with sentiment warnings"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
         job_id = data.get('job_id')
         contract_code = data.get('contract_code')
         analysis_type = data.get('analysis_type', 'comprehensive')
