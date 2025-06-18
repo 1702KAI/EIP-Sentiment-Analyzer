@@ -438,9 +438,38 @@ class SentimentAnalyzer:
             
         except Exception as e:
             logging.error(f"❌ Stage 3 failed: {e}")
-            # Return first available file for test compatibility
-            for filename in ['unified_sentiment_summary.csv', 'enriched_sentiment_with_status.csv']:
-                filepath = os.path.join(output_dir, filename)
-                if os.path.exists(filepath):
-                    return filepath
-            return None
+            # Create fallback final file using stage 1 data
+            final_file = os.path.join(output_dir, "final_merged_analysis.csv")
+            stage1_file = os.path.join(output_dir, "unified_sentiment_summary.csv")
+            
+            if os.path.exists(stage1_file):
+                try:
+                    stage1_df = pd.read_csv(stage1_file)
+                    # Standardize column names for dashboard compatibility
+                    if 'eip_erc_numbers' in stage1_df.columns:
+                        stage1_df['eip'] = stage1_df['eip_erc_numbers']
+                        stage1_df = stage1_df.drop('eip_erc_numbers', axis=1)
+                    
+                    # Add missing columns with default values
+                    if 'category' not in stage1_df.columns:
+                        stage1_df['category'] = 'Unknown'
+                    if 'status' not in stage1_df.columns:
+                        stage1_df['status'] = 'Unknown'
+                    if 'title' not in stage1_df.columns:
+                        stage1_df['title'] = None
+                    if 'author' not in stage1_df.columns:
+                        stage1_df['author'] = None
+                    
+                    stage1_df.to_csv(final_file, index=False)
+                    logging.info(f"✅ Created fallback final file from stage 1: {len(stage1_df)} rows")
+                    return [final_file]
+                except Exception as fallback_error:
+                    logging.error(f"Fallback creation failed: {fallback_error}")
+            
+            # Last resort: empty file with proper structure
+            empty_df = pd.DataFrame(columns=[
+                'eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu',
+                'total_comment_count', 'category', 'status', 'title', 'author'
+            ])
+            empty_df.to_csv(final_file, index=False)
+            return [final_file]

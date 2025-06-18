@@ -124,9 +124,11 @@ def process_csv_background(job_id, filepath, output_dir):
             
             final_output = analyzer.run_stage3(output_dir)
             
-            # Save output files to database
-            for file_path in final_output:
-                if os.path.exists(file_path):
+            # Save output files to database - handle both single file and list returns
+            output_files = final_output if isinstance(final_output, list) else [final_output] if final_output else []
+            
+            for file_path in output_files:
+                if file_path and os.path.exists(file_path):
                     filename = os.path.basename(file_path)
                     file_type = 'unknown'
                     if 'final_merged' in filename:
@@ -145,7 +147,7 @@ def process_csv_background(job_id, filepath, output_dir):
                     db.session.add(output_file)
             
             # Save sentiment data if final merged file exists
-            final_file = next((f for f in final_output if 'final_merged' in f), None)
+            final_file = next((f for f in output_files if f and 'final_merged' in f), None)
             if final_file and os.path.exists(final_file):
                 try:
                     df = pd.read_csv(final_file)
