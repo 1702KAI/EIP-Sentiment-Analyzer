@@ -9,7 +9,7 @@ class EIPCodeGenerator:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY environment variable is required")
-        self.client = OpenAI(api_key=api_key, timeout=60.0)
+        self.client = OpenAI(api_key=api_key, timeout=45.0)
         
     def generate_eip_implementation(self, eip_data, contract_type, custom_prompt=None):
         """
@@ -63,7 +63,7 @@ Make sure the contract is complete and deployable.
                 ],
                 max_tokens=3000,
                 temperature=0.1,  # Low temperature for consistent code generation
-                timeout=60.0
+                timeout=45.0
             )
 
             generated_code = response.choices[0].message.content
@@ -78,10 +78,19 @@ Make sure the contract is complete and deployable.
             }
 
         except Exception as e:
-            logging.error(f"Code generation failed: {str(e)}")
+            error_msg = str(e)
+            if "timeout" in error_msg.lower() or "read timeout" in error_msg.lower():
+                # Generate a fallback contract template when API times out
+                return self._generate_fallback_contract(eip_data, contract_type)
+            elif "rate limit" in error_msg.lower():
+                error_msg = "API rate limit exceeded. Please wait a moment and try again."
+            elif "invalid" in error_msg.lower() and "key" in error_msg.lower():
+                error_msg = "OpenAI API key is invalid or missing."
+            
+            logging.error(f"Code generation failed: {error_msg}")
             return {
                 "success": False,
-                "error": f"Code generation failed: {str(e)}",
+                "error": error_msg,
                 "eip_number": eip_data.get('eip', 'N/A'),
                 "contract_type": contract_type
             }

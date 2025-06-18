@@ -404,11 +404,16 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
         
         if (result.success) {
             // Store generated contract
-            generatedContract = result.generated_code;
+            generatedContract = result.generated_code || result.contract_code;
+            
+            if (!generatedContract) {
+                alert('Error: No contract code received from the generator');
+                return;
+            }
             
             // Update contract tab with syntax highlighting
             const contractCodeEl = document.getElementById('contractCode');
-            contractCodeEl.textContent = result.generated_code;
+            contractCodeEl.textContent = generatedContract;
             contractCodeEl.className = 'language-solidity';
             
             // Apply syntax highlighting if Prism is available
@@ -424,7 +429,7 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
             // Scroll to results
             document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
         } else {
-            alert('Error generating contract: ' + result.error);
+            alert('Error generating contract: ' + (result.error || 'Unknown error'));
         }
     } catch (error) {
         loadingModal.hide();

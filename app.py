@@ -640,12 +640,20 @@ def generate_contract():
             }
         
         # Initialize code generator
-        generator = EIPCodeGenerator()
-        
-        # Generate the contract
-        result = generator.generate_eip_implementation(eip_data, contract_type, custom_prompt)
-        
-        return jsonify(result)
+        try:
+            generator = EIPCodeGenerator()
+            
+            # Generate the contract
+            result = generator.generate_eip_implementation(eip_data, contract_type, custom_prompt)
+            
+            # Ensure we return valid JSON
+            if not isinstance(result, dict):
+                return jsonify({'success': False, 'error': 'Invalid response from generator'})
+                
+            return jsonify(result)
+        except Exception as gen_error:
+            logging.error(f"Generator initialization error: {str(gen_error)}")
+            return jsonify({'success': False, 'error': f'Generator error: {str(gen_error)}'})
         
     except Exception as e:
         logging.error(f"Contract generation error: {str(e)}")
