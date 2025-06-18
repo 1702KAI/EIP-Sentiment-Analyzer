@@ -1,0 +1,546 @@
+prNumber,prTitle,repo,eip,proposed_status
+8843,Update EIP-7723: Move to Review,EIPs,7723,Review
+8837,Update EIP-7742: Move to Review,EIPs,7742,Review
+8834,Update EIP-5792: Move to Review,EIPs,5792,Review
+8825,Update EIP-5920: Move to Stagnant,EIPs,5920,Stagnant
+8813,Update EIP-5792: Move to Last Call,EIPs,5792,Last Call
+8809,Update EIP-7039: Move to Stagnant,EIPs,7039,Stagnant
+8807,Update EIP-3155: Move to Review,EIPs,3155,Review
+8802,Update EIP-3155: Move to Review,EIPs,3155,Review
+8798,Update EIP-3155: Move to Draft,EIPs,3155,Draft
+8796,Update EIP-3155: Move to Review,EIPs,3155,Review
+8792,Update EIP-7637: Move to Review,EIPs,7637,Review
+8783,Update EIP-6466: Move to Stagnant,EIPs,6466,Stagnant
+8782,Update EIP-6465: Move to Stagnant,EIPs,6465,Stagnant
+8769,Update EIP-6789: Move to Draft,EIPs,6789,Draft
+8757,Update EIP-5792: Move to Review,EIPs,5792,Review
+8750,Update EIP-7610: Move to Review,EIPs,7610,Review
+8749,Update EIP-7675: Move to Review,EIPs,7675,Review
+8732,Update EIP-2294: Move to Review,EIPs,2294,Review
+8729,Update EIP-7636: Move to Final,EIPs,7636,Final
+8704,Update EIP-7545: Move to Stagnant,EIPs,7545,Stagnant
+8703,Update EIP-6914: Move to Stagnant,EIPs,6914,Stagnant
+8672,Update EIP-7623: Move to Review,EIPs,7623,Review
+8671,Update EIP-7594: Move to Review,EIPs,7594,Review
+8669,Update EIP-7636: Move to Last Call,EIPs,7636,Last Call
+8661,Update EIP-7547: Move to Review,EIPs,7547,Review
+8660,Update EIP-7698: Move to Review,EIPs,7698,Review
+8659,Update EIP-7069: Move to Review,EIPs,7069,Review
+8658,Update EIP-7692: Move to Review,EIPs,7692,Review
+8657,Update EIP-7702: Move to Review,EIPs,7702,Review
+8656,Update EIP-7685: Move to Review,EIPs,7685,Review
+8655,Update EIP-7251: Move to Review,EIPs,7251,Review
+8654,Update EIP-7002: Move to Review,EIPs,7002,Review
+8653,Update EIP-6110: Move to Review,EIPs,6110,Review
+8652,Update EIP-2935: Move to Review,EIPs,2935,Review
+8651,Update EIP-7600: Move to Review,EIPs,7600,Review
+8647,Update EIP-7251: Move to Review,EIPs,7251,Review
+8646,Update EIP-7549: Move to Review,EIPs,7549,Review
+8614,Update EIP-7688: Move to Review,EIPs,7688,Review
+8612,Update EIP-5792: Move to Last Call,EIPs,5792,Last Call
+8534,Update EIP-7664: Move to Withdrawn,EIPs,7664,Withdrawn
+8530,Update EIP-7623: Move to Withdrawn,EIPs,7623,Withdrawn
+8513,Update EIP-7658: Move to Review,EIPs,7658,Review
+8500,Update EIP-7600: Move to Review,EIPs,7600,Review
+8450,Update EIP-5792: Move to Review,EIPs,5792,Review
+8427,Update EIP-7519: Move to Stagnant,EIPs,7519,Stagnant
+8397,Update EIP-7587: Move to Last Call,EIPs,7587,Last Call
+8364,Update EIP-7636: Move to Review,EIPs,7636,Review
+8362,Update EIP-7044: Move to Final,EIPs,7044,Final
+8361,Update EIP-5792: Move to Draft,EIPs,5792,Draft
+8360,Update EIP-5656: Move to Last Call,EIPs,5656,Last Call
+8346,Update EIP-5656: Move to Final,EIPs,5656,Final
+8345,Update EIP-7044: Move to Final,EIPs,7044,Final
+8337,Update EIP-7045: Move to Final,EIPs,7045,Final
+8336,Update EIP-6780: Move to Final,EIPs,6780,Final
+8335,Update EIP-4844: Move to Final,EIPs,4844,Final
+8334,Update EIP-7569: Move to Final,EIPs,7569,Final
+8333,Update EIP-1153: Move to Final,EIPs,1153,Final
+8321,Update EIP-7514: Move to Final,EIPs,7514,Final
+8320,Update EIP-7044: Move to Final,EIPs,7044,Final
+8319,Update EIP-7377: Move to Draft,EIPs,7377,Draft
+8318,Update EIP-4788: Move to Final,EIPs,4788,Final
+8311,Update EIP-4200: Move to Review,EIPs,4200,Review
+8306,Update EIP-7620: Move to Review,EIPs,7620,Review
+8297,Update EIP-7441: Move to Stagnant,EIPs,7441,Stagnant
+8252,Update EIP-2537: Move to Review,EIPs,2537,Review
+8251,Update EIP-7523: Move to Last Call,EIPs,7523,Last Call
+8225,Update EIP-7523: Move to Review,EIPs,7523,Review
+8224,Update EIP-7523: Move to Review,EIPs,7523,Review
+8217,Update EIP-3540: Move to Review,EIPs,3540,Review
+8216,Update EIP-6206: Move to Review,EIPs,6206,Review
+8215,Update EIP-7480: Move to Review,EIPs,7480,Review
+8172,Update EIP-7568: Move to Last Call,EIPs,7568,Last Call
+8166,Update EIP-2935: Move to Draft,EIPs,2935,Draft
+8164,Update EIP-7587: Move to Review,EIPs,7587,Review
+8153,Update EIP-5656: Move to Last Call,EIPs,5656,Last Call
+8152,Update EIP-3540: Move to Review,EIPs,3540,Review
+8148,Update EIP-4938: Move to Last Call,EIPs,4938,Last Call
+8147,Update EIP-5793: Move to Last Call,EIPs,5793,Last Call
+8146,Update EIP-4844: Move to Last Call,EIPs,4844,Last Call
+8144,Update EIP-7044: Move to Last Call,EIPs,7044,Last Call
+8143,Update EIP-7516: Move to Last Call,EIPs,7516,Last Call
+8141,Update EIP-4788: Move to Last Call,EIPs,4788,Last Call
+8140,Update EIP-6780: Move to Last Call,EIPs,6780,Last Call
+8139,Update EIP-7045: Move to Last Call,EIPs,7045,Last Call
+8138,Update EIP-4762: Move to Draft,EIPs,4762,Draft
+8134,Update EIP-7514: Move to Last Call,EIPs,7514,Last Call
+8133,Update EIP-6122: Move to Final,EIPs,6122,Final
+8132,Update EIP-6953: Move to Final,EIPs,6953,Final
+8131,Update EIP-7569: Move to Last Call,EIPs,7569,Last Call
+8122,Update EIP-6466: Move to Review,EIPs,6466,Review
+8120,Update EIP-6913: Move to Draft,EIPs,6913,Draft
+8101,Update EIP-7212: Move to Moved,EIPs,7212,Moved
+8072,Update EIP-6465: Move to Review,EIPs,6465,Review
+8071,Update EIP-6404: Move to Review,EIPs,6404,Review
+8054,Update EIP-6493: Move to Review,EIPs,6493,Review
+8048,Update EIP-7568: Move to Review,EIPs,7568,Review
+8028,Update EIP-2070: Move to Withdrawn,EIPs,2070,Withdrawn
+8027,Update EIP-7569: Move to Review,EIPs,7569,Review
+8009,Update EIP-6780: Move to Review,EIPs,6780,Review
+8008,Update EIP-6122: Move to Last Call,EIPs,6122,Last Call
+8000,Update EIP-6953: Move to Last Call,EIPs,6953,Last Call
+7998,Update EIP-7549: Move to Draft,EIPs,7549,Draft
+7996,Update EIP-5792: Move to Review,EIPs,5792,Review
+7995,Update EIP-7516: Move to Last Call,EIPs,7516,Last Call
+7992,Update EIP-4788: Move to Review,EIPs,4788,Review
+7991,Update EIP-3074: Move to Review,EIPs,3074,Review
+7985,Update EIP-7516: Move to Review,EIPs,7516,Review
+7984,Update EIP-5656: Move to Last Call,EIPs,5656,Last Call
+7948,Update EIP-2294: Move to Draft,EIPs,2294,Draft
+7929,Update EIP-6916: Move to Review,EIPs,6916,Review
+7927,Update EIP-7066: Move to Final,EIPs,7066,Final
+7911,Update EIP-5164: Move to Last Call,EIPs,5164,Last Call
+7909,Update EIP-6357: Move to Last Call,EIPs,6357,Last Call
+7903,Update EIP-6956: Move to Review,EIPs,6956,Review
+7883,Update EIP-7160: Move to Last Call,EIPs,7160,Last Call
+7879,Update EIP-7528: Move to Review,EIPs,7528,Review
+7871,Update EIP-3643: Move to Last Call,EIPs,3643,Last Call
+7864,Update EIP-7409: Move to Final,EIPs,7409,Final
+7861,Update EIP-6596: Move to Review,EIPs,6596,Review
+7857,Update EIP-6123: Move to Draft,EIPs,6123,Draft
+7854,Update EIP-5189: Move to Draft,EIPs,5189,Draft
+7847,Update EIP-2294: Move to Review,EIPs,2294,Review
+7832,Update EIP-7015: Move to Last Call,EIPs,7015,Last Call
+7819,Update EIP-663: Move to Draft,EIPs,663,Draft
+7816,Update EIP-6963: Move to Final,EIPs,6963,Final
+7813,Update EIP-7503: Move to Review,EIPs,7503,Review
+7812,Update EIP-6809: Move to Final,EIPs,6809,Final
+7811,Update EIP-6808: Move to Final,EIPs,6808,Final
+7804,Update EIP-7053: Move to Final,EIPs,7053,Final
+7801,Update EIP-6982: Move to Last Call,EIPs,6982,Last Call
+7787,Update EIP-7231: Move to Last Call,EIPs,7231,Last Call
+7780,Update EIP-6963: Move to Last Call,EIPs,6963,Last Call
+7779,Update EIP-7201: Move to Last Call,EIPs,7201,Last Call
+7773,Update EIP-5485: Move to Review,EIPs,5485,Review
+7766,Update EIP-1767: Move to Draft,EIPs,1767,Draft
+7763,Update EIP-7201: Move to Review,EIPs,7201,Review
+7746,Update EIP-7432: Move to Review,EIPs,7432,Review
+7740,Update EIP-7514: Move to Review,EIPs,7514,Review
+7737,Update EIP-7508: Move to Review,EIPs,7508,Review
+7736,Update EIP-7409: Move to Last Call,EIPs,7409,Last Call
+7735,Update EIP-7401: Move to Final,EIPs,7401,Final
+7731,Update EIP-4881: Move to Final,EIPs,4881,Final
+7718,Update EIP-7329: Move to Final,EIPs,7329,Final
+7708,Update EIP-5269: Move to Last Call,EIPs,5269,Last Call
+7697,Update EIP-5450: Move to Review,EIPs,5450,Review
+7695,Update EIP-5982: Move to Review,EIPs,5982,Review
+7694,Update EIP-5269: Move to Review,EIPs,5269,Review
+7693,Update EIP-5453: Move to Last Call,EIPs,5453,Last Call
+7692,Update EIP-5247: Move to Review,EIPs,5247,Review
+7690,Update EIP-5453: Move to Review,EIPs,5453,Review
+7689,Update EIP-7432: Move to Last Call,EIPs,7432,Last Call
+7687,Update EIP-7231: Move to Review,EIPs,7231,Review
+7686,Update EIP-6809: Move to Last Call,EIPs,6809,Last Call
+7685,Update EIP-6808: Move to Last Call,EIPs,6808,Last Call
+7684,Update EIP-6809: Move to Last Call,EIPs,6809,Last Call
+7683,Update EIP-6808: Move to Last Call,EIPs,6808,Last Call
+7679,Update EIP-5585: Move to Last Call,EIPs,5585,Last Call
+7670,Update EIP-7053: Move to Last Call,EIPs,7053,Last Call
+7667,Update EIP-7092: Move to Review,EIPs,7092,Review
+7660,Update EIP-223: Move to Final,EIPs,223,Final
+7648,Update EIP-5725: Move to Final,EIPs,5725,Final
+7647,Update EIP-5564: Move to Review,EIPs,5564,Review
+7645,Update EIP-7401: Move to Last Call,EIPs,7401,Last Call
+7640,Update EIP-6492: Move to Final,EIPs,6492,Final
+7637,Update EIP-5114: Move to Last Call,EIPs,5114,Last Call
+7632,Update EIP-5521: Move to Review,EIPs,5521,Review
+7622,Update EIP-6538: Move to Stagnant,EIPs,6538,Stagnant
+7595,Update EIP-5593: Move to Stagnant,EIPs,5593,Stagnant
+7587,Update EIP-5450: Move to Stagnant,EIPs,5450,Stagnant
+7578,Update EIP-5139: Move to Stagnant,EIPs,5139,Stagnant
+7548,Update EIP-7495: Move to Review,EIPs,7495,Review
+7543,Update EIP-5725: Move to Final,EIPs,5725,Final
+7539,Update EIP-7409: Move to Review,EIPs,7409,Review
+7535,Update EIP-2539: Move to Draft,EIPs,2539,Draft
+7534,Update EIP-7160: Move to Review,EIPs,7160,Review
+7519,Update EIP-7201: Move to Last Call,EIPs,7201,Last Call
+7517,Update EIP-7329: Move to Last Call,EIPs,7329,Last Call
+7515,Update EIP-665: Move to Draft,EIPs,665,Draft
+7514,Update EIP-7432: Move to Review,EIPs,7432,Review
+7513,"Update EIP-5521: Test cases added, about to move to review",EIPs,5521,Review
+7489,Update EIP-4881: Move to Last Call,EIPs,4881,Last Call
+7485,Update EIP-5521: Move to Draft,EIPs,5521,Draft
+7483,Update EIP-223: Move to Last Call,EIPs,223,Last Call
+7470,Update EIP-7329: Move to Review,EIPs,7329,Review
+7460,Update EIP-6046: Move to Withdrawn,EIPs,6046,Withdrawn
+7451,Update EIP-6780: Move to Review,EIPs,6780,Review
+7450,Update EIP-2135: Move to Final,EIPs,2135,Final
+7449,Update EIP-998: Move to Review,EIPs,998,Review
+7437,Update EIP-6551: Move to Review,EIPs,6551,Review
+7421,Update EIP-6982: Move to Review,EIPs,6982,Review
+7414,Update EIP-7401: Move to Review,EIPs,7401,Review
+7365,Update EIP-7045: Move to Review,EIPs,7045,Review
+7360,Update EIP-6475: Move to Draft,EIPs,6475,Draft
+7353,Update EIP-7066: Move to Review,EIPs,7066,Review
+7352,Update EIP-6963: Move to Review,EIPs,6963,Review
+7349,Update EIP-7329: Move to Last Call,EIPs,7329,Last Call
+7339,Update EIP-223: Move to Review,EIPs,223,Review
+7326,Update EIP-7044: Move to Review,EIPs,7044,Review
+7309,Update EIP-6066: Move to Final,EIPs,6066,Final
+7298,Update EIP-5202: Move to Final,EIPs,5202,Final
+7277,Update EIP-7212: Move to Review,EIPs,7212,Review
+7275,Update EIP-6239: Move to Final,EIPs,6239,Final
+7271,Update EIP-3643: Move to Review,EIPs,3643,Review
+7240,Update EIP-6381: Move to Final,EIPs,6381,Final
+7239,Update EIP-7144: Move to Review,EIPs,7144,Review
+7225,Update EIP-7199: Move to Withdrawn,EIPs,7199,Withdrawn
+7222,Update EIP-7199: Move to Review,EIPs,7199,Review
+7218,Update EIP-7053: Move to Review,EIPs,7053,Review
+7203,Update EIP-6239: Move to Last Call,EIPs,6239,Last Call
+7181,Update EIP-6492: Move to Last Call,EIPs,6492,Last Call
+7180,Update EIP-5725: Move to Last Call,EIPs,5725,Last Call
+7177,Update EIP-6997: Move to Last Call,EIPs,6997,Last Call
+7176,Update EIP-6239: Move to Review,EIPs,6239,Review
+7164,Update EIP-3643: Move to Draft,EIPs,3643,Draft
+7157,Update EIP-6093: Move to Last Call,EIPs,6093,Last Call
+7137,Update EIP-4824: Move to Review,EIPs,4824,Review
+7129,Update EIP-6997: Move to Review,EIPs,6997,Review
+7128,Update EIP-5169: Move to Final,EIPs,5169,Final
+7118,Update EIP-5008: Move to Final,EIPs,5008,Final
+7096,Update EIP-6358: Update the implementation examples and Move to Review,EIPs,6358,Review
+7094,Update EIP-6122: Move to Review,EIPs,6122,Review
+7089,Update EIP-5007: Move to Final,EIPs,5007,Final
+7088,Update EIP-6454: Move to Final,EIPs,6454,Final
+7079,Update EIP-6809: Move to Review,EIPs,6809,Review
+7078,Update EIP-6808: Move to Review,EIPs,6808,Review
+7073,Update EIP-6953: Move to Review,EIPs,6953,Review
+7068,Update EIP-5570: Move to Final,EIPs,5570,Final
+7061,Update EIP-6066: Move to Last Call,EIPs,6066,Last Call
+7034,Update EIP-6963: Move to Review,EIPs,6963,Review
+7029,Update EIP-6672: Move to Final,EIPs,6672,Final
+7022,Update EIP-5615: Move to Final,EIPs,5615,Final
+7021,Update EIP-5507: Move to Final,EIPs,5507,Final
+7006,Update EIP-3026: Move to Draft,EIPs,3026,Draft
+6991,Update EIP-6953: Move to Review,EIPs,6953,Review
+6973,Update EIP-6065: Move to Review,EIPs,6065,Review
+6970,Update EIP-1185: Move to Review,EIPs,1185,Review
+6966,Update EIP-5570: Move to Last Call,EIPs,5570,Last Call
+6949,Update EIP-6672: Move to Last Call,EIPs,6672,Last Call
+6947,Update EIP-6493: Move to Review,EIPs,6493,Review
+6946,Update EIP-6475: Move to Review,EIPs,6475,Review
+6940,Update EIP-6105: Move to Final,EIPs,6105,Final
+6938,Update EIP-5169: Move to Last Call,EIPs,5169,Last Call
+6930,Update EIP-5008: Move to Last Call,EIPs,5008,Last Call
+6925,Update EIP-5656: Move to Review,EIPs,5656,Review
+6919,Update EIP-5725: Move to Review,EIPs,5725,Review
+6911,Update EIP-6224: Move to Review,EIPs,6224,Review
+6905,Update EIP-3860: Move to Final,EIPs,3860,Final
+6904,Update EIP-3855: Move to Final,EIPs,3855,Final
+6903,Update EIP-3651: Move to Final,EIPs,3651,Final
+6902,Update EIP-4895: Move to Final,EIPs,4895,Final
+6901,Update EIP-6454: Move to Final,EIPs,6454,Final
+6896,Update EIP-6381: Move to Last Call,EIPs,6381,Last Call
+6895,Update EIP-6220: Move to Final,EIPs,6220,Final
+6887,Update EIP-6672: Move to Review,EIPs,6672,Review
+6886,Update EIP-1185: Move to Draft,EIPs,1185,Draft
+6868,Update EIP-2677: Move to Withdrawn,EIPs,2677,Withdrawn
+6859,Update EIP-4788: Move to Draft,EIPs,4788,Draft
+6847,Update EIP-5202: Move to Last Call,EIPs,5202,Last Call
+6846,Update EIP-6059: Move to Final,EIPs,6059,Final
+6845,Update EIP-5773: Move to Final,EIPs,5773,Final
+6843,Update EIP-4910: Move to Final,EIPs,4910,Final
+6841,Update EIP-634: Move to Last Call,EIPs,634,Last Call
+6837,Update EIP-3855: Move to Last Call,EIPs,3855,Last Call
+6836,Update EIP-4895: Move to Last Call,EIPs,4895,Last Call
+6835,Update EIP-3860: Move to Last Call,EIPs,3860,Last Call
+6828,Update EIP-6220: Move to Last Call,EIPs,6220,Last Call
+6819,Update EIP-4736: Move to Final,EIPs,4736,Final
+6812,Update EIP-4881: Move to Review,EIPs,4881,Review
+6804,Update EIP-4972: Move to Draft,EIPs,4972,Draft
+6802,Update EIP-4881: Move to Draft,EIPs,4881,Draft
+6798,Update EIP-5169: Move to Review,EIPs,5169,Review
+6792,Update EIP-6358: Move to Review,EIPs,6358,Review
+6783,Update EIP-5521: Move to Draft,EIPs,5521,Draft
+6777,Update EIP-5219: Move to Final,EIPs,5219,Final
+6775,Update EIP-6617: Move to Review,EIPs,6617,Review
+6771,Update EIP-5169: Move to Draft,EIPs,5169,Draft
+6770,Update EIP-6366: Move to Review,EIPs,6366,Review
+6756,Update EIP-5006: Move to Final,EIPs,5006,Final
+6754,Update EIP-5008: Move to Review,EIPs,5008,Review
+6742,Update EIP-5380: Move to Final,EIPs,5380,Final
+6740,Update EIP-6105: Move to Last Call,EIPs,6105,Last Call
+6707,Update EIP-4824: Move to Stagnant,EIPs,4824,Stagnant
+6703,Update EIP-5570: Move to Last Call,EIPs,5570,Last Call
+6701,Update EIP-1046: Move to Final,EIPs,1046,Final
+6700,Update EIP-747: Move to Final,EIPs,747,Final
+6699,Update EIP-2255: Move to Final,EIPs,2255,Final
+6675,Update EIP-5252: Move to review,EIPs,5252,Review
+6668,Update EIP-6492: move to Review,EIPs,6492,Review
+6666,Update EIP-4736: Move to Last call,EIPs,4736,Last Call
+6652,Update EIP-5639: Move to Review,EIPs,5639,Review
+6624,Update eip-6105: Move to Review,EIPs,6105,Review
+6623,Update EIP-6147: Move to Final,EIPs,6147,Final
+6621,Update EIP-4950: Move to Draft,EIPs,4950,Draft
+6620,Update EIP-4944: Move to Draft,EIPs,4944,Draft
+6599,Update EIP-4804: Move to final,EIPs,4804,Final
+6593,Update EIP-6066: Move to Review,EIPs,6066,Review
+6592,Update EIP-6357: Move to Review,EIPs,6357,Review
+6581,Update EIP-1046: Move to Last Call,EIPs,1046,Last Call
+6561,Update EIP-6315: Move to Review,EIPs,6315,Review
+6560,Update EIP-5219: Move to Last Call,EIPs,5219,Last Call
+6558,Update EIP-2255: Move to Last Call,EIPs,2255,Last Call
+6557,Update EIP-747: Move to Last Call,EIPs,747,Last Call
+6556,Update EIP-5507: Move to Last Call,EIPs,5507,Last Call
+6554,Update EIP-5380: Move to Last Call,EIPs,5380,Last Call
+6548,Update EIP-5749: Move to Final,EIPs,5749,Final
+6521,Update EIP-3770: Move to Review,EIPs,3770,Review
+6491,Update EIP-3091: Move to Draft,EIPs,3091,Draft
+6484,Update EIP-5805: Refer to EIP-6372 for clock and move to Review,EIPs,5805,Review
+6481,Update EIP-5267: Move to Final status,EIPs,5267,Final Status
+6463,Update EIP-5585: Remove staking functions and move to Review,EIPs,5585,Review
+6461,Update EIP-6150: Move to Final,EIPs,6150,Final
+6458,Update EIP-2015: Move to Review,EIPs,2015,Review
+6457,Update EIP-3085: Move to Review,EIPs,3085,Review
+6456,Update EIP-4938: Move to Review,EIPs,4938,Review
+6452,Update EIP-6147: Move to Review,EIPs,6147,Review
+6449,Update EIP-4361: Move to Review,EIPs,4361,Review
+6447,Update EIP-4736: Move to Review,EIPs,4736,Review
+6443,Update EIP-5018: Move to Review,EIPs,5018,Review
+6411,Update EIP-4804: Move to Last Call,EIPs,4804,Last Call
+6400,"Update EIP-6372: Move to Review and specify CLOCK_NUMBER with ""MUST"" behavior",EIPs,6372,Review And Specify Clock_Number With
+6395,Update EIP-5625: Move to Review,EIPs,5625,Review
+6376,Update EIP-6190: Move to Review,EIPs,6190,Review
+6375,Update EIP-6189: Move to Review,EIPs,6189,Review
+6374,Update EIP-6188: Move to Review,EIPs,6188,Review
+6373,Update EIP-5289: Move to Review,EIPs,5289,Review
+6365,Update EIP-5646: Move to Final,EIPs,5646,Final
+6363,Update EIP-4834: Move to Final,EIPs,4834,Final
+6362,Update EIP-2771: Move to Final,EIPs,2771,Final
+6351,Update EIP-6188: Move to Review,EIPs,6188,Review
+6343,Update EIP-5298: Move to Review,EIPs,5298,Review
+6342,Update EIP-5604: Move to Review,EIPs,5604,Review
+6341,Update EIP-5437: Move to Review,EIPs,5437,Review
+6340,Update EIP-5982: Move to Review,EIPs,5982,Review
+6339,Update EIP-5453: Move to Review,EIPs,5453,Review
+6338,Update EIP-2135: Move to Last Call,EIPs,2135,Last Call
+6334,Update EIP-4974: Move to Review,EIPs,4974,Review
+6329,Update EIP-4955: Move to Last Call,EIPs,4955,Last Call
+6326,Update EIP-5269: Move to Review,EIPs,5269,Review
+6324,Update EIP-3326: Move to draft,EIPs,3326,Draft
+6323,Update EIP-3085: Move to draft,EIPs,3085,Draft
+6322,Update EIP-3091: Move to draft,EIPs,3091,Draft
+6311,Update EIP-6150: Move to Last Call,EIPs,6150,Last Call
+6309,Update EIP-1898: Move to Review,EIPs,1898,Review
+6304,Update EIP-4736: Move to Draft,EIPs,4736,Draft
+6303,Update EIP-5570: Move to review,EIPs,5570,Review
+6300,Update EIP-5267: Move to Last Call,EIPs,5267,Last Call
+6295,Update EIP-5920: Move to Review,EIPs,5920,Review
+6287,Update EIP-4834: Move to Last Call,EIPs,4834,Last Call
+6286,Update EIP-5507: Move to review,EIPs,5507,Review
+6264,Update EIP-2771: Move to Last Call,EIPs,2771,Last Call
+6221,Update EIP-6059: Move to Review,EIPs,6059,Review
+6219,Update EIP-6150: Move to Review,EIPs,6150,Review
+6217,Update EIP-5380: Move to Review,EIPs,5380,Review
+6187,Update EIP-5380: Move to Review,EIPs,5380,Review
+6186,Update EIP-5507: Move to review,EIPs,5507,Review
+6185,Update EIP-5615: Move to Last Call,EIPs,5615,Last Call
+6180,Update EIP-5219: Move to review,EIPs,5219,Review
+6177,Update EIP-5568: Move to review,EIPs,5568,Review
+6174,Update EIP-6049: Move to final,EIPs,6049,Final
+6153,Update EIP-5023: Move to last call,EIPs,5023,Last Call
+6151,Update EIP-5606: Move to Last Call,EIPs,5606,Last Call
+6124,Update EIP-4519: Move to Final,EIPs,4519,Final
+6097,Update EIP-5646: Move to Last Call,EIPs,5646,Last Call
+6085,Update EIP-6049: Move to Last Call,EIPs,6049,Last Call
+6076,Update EIP-4519: Move to Final,EIPs,4519,Final
+6074,Update EIP-6049: Move to review,EIPs,6049,Review
+6062,Update EIP-5489: Move to final,EIPs,5489,Final
+6057,Update EIP-1153: Move to last call,EIPs,1153,Last Call
+6050,Update EIP-4527: Move to review,EIPs,4527,Review
+6033,Update EIP-5757: Move to final,EIPs,5757,Final
+6018,Update EIP-5749: Move to last call,EIPs,5749,Last Call
+6015,Update EIP-2481: Move to final,EIPs,2481,Final
+6014,EIP-4938: Move to back to draft,EIPs,4938,Back To Draft
+6013,Update EIP-4527: Move to draft,EIPs,4527,Draft
+5995,Update EIP-5489: Move to Last Call,EIPs,5489,Last Call
+5991,"Update EIP-5023: Move to Review, minor corrections to interface",EIPs,5023,Review
+5980,Update EIP-1898: Move to draft,EIPs,1898,Draft
+5978,Update EIP-5202: Move to review,EIPs,5202,Review
+5934,Update EIP-5298: Move to Review,EIPs,5298,Review
+5919,Update EIP-5732: Move to Final,EIPs,5732,Final
+5912,Update EIP-5749: Move to Review,EIPs,5749,Review
+5908,Update EIP-4519: Move to last call,EIPs,4519,Last Call
+5900,Update EIP-5528: Move to Final,EIPs,5528,Final
+5899,Update EIP-5679: Move to Final,EIPs,5679,Final
+5897,Updated EIP-5375: Move to Final,EIPs,5375,Final
+5881,Update EIP-5484: Move to Final,EIPs,5484,Final
+5872,Update EIP-1753: Move to draft,EIPs,1753,Draft
+5870,EIP-5757: Move to last call,EIPs,5757,Last Call
+5861,Update EIP-5750: Move to Last Call,EIPs,5750,Last Call
+5855,Update EIP-4519: Move to Last Call,EIPs,4519,Last Call
+5841,Update EIP-5528: Move to Last Call,EIPs,5528,Last Call
+5839,Update EIP-5216: Move to Last Call,EIPs,5216,Last Call
+5829,Update EIP-4955: Move to review,EIPs,4955,Review
+5813,Update EIP-5375: Clarify address casing and move to Last Call,EIPs,5375,Last Call
+5809,Update EIP-5484: Move to Last Call,EIPs,5484,Last Call
+5808,Update EIP-5164: Move to review,EIPs,5164,Review
+5790,Update EIP-5528: Move to final,EIPs,5528,Final
+5785,Update EIP-5750: Move to Review,EIPs,5750,Review
+5782,Update EIP-2612: Move to Final,EIPs,2612,Final
+5778,Update EIP-5615: Move to Review,EIPs,5615,Review
+5763,Update EIP-2294: Move to Review,EIPs,2294,Review
+5761,Update EIP-2135: Move to Last Call,EIPs,2135,Last Call
+5759,Update EIP-5679: Move to Last Call,EIPs,5679,Last Call
+5758,Update EIP-5732: Move to Last Call,EIPs,5732,Last Call
+5736,Update EIP-5489: Move to review,EIPs,5489,Review
+5734,Update EIP-5643: Move to Review,EIPs,5643,Review
+5693,Update EIP-2135: Move to Review,EIPs,2135,Review
+5692,Update EIP-5679: Move to Review,EIPs,5679,Review
+5688,Update EIP-5646: Move to review,EIPs,5646,Review
+5670,Update EIP-5528: Move to Last Call,EIPs,5528,Last Call
+5661,EIP-4399: move to Final,EIPs,4399,Final
+5660,EIP-3675: move to Final,EIPs,3675,Final
+5654,Update EIP-5192: Move to Final,EIPs,5192,Final
+5613,Update EIP-5553: Move to Review,EIPs,5553,Review
+5612,Update EIP-5496: Move to review,EIPs,5496,Review
+5609,Update EIP-5528: Move to Review,EIPs,5528,Review
+5605,Update EIP-5484: Move to Review,EIPs,5484,Review
+5591,Update EIP-3525: Move to final,EIPs,3525,Final
+5571,Update EIP-5216: Move to Review,EIPs,5216,Review
+5549,Update EIP-5192: Move to Last Call,EIPs,5192,Last Call
+5506,Update EIP-2612: Move to Last Call,EIPs,2612,Last Call
+5295,Update EIP-4834: Move to Last Call,EIPs,4834,Last Call
+5221,Update EIP-4834: Move to Review,EIPs,4834,Review
+5196,Update EIP-2612: Move to Last Call,EIPs,2612,Last Call
+4837,EIP-4399: Move to Review,EIPs,4399,Review
+4830,EIP-4803: Move to review,EIPs,4803,Review
+4765,EIP-3675: Move to Review,EIPs,3675,Review
+3975,Update EIP-2982: Move to Final,EIPs,2982,Final
+3624,Updated EIP-2098 w/ suggestions and move to Review,EIPs,2098,Review
+3459,EIP-3074: Move to strict AUTHCALL rules,EIPs,3074,Strict Authcall Rules
+3457,eip2929 and eip2930: move to last call,EIPs,2929,Last Call
+3385,[EIP-3074] Move to AUTHCALL version,EIPs,3074,Authcall Version
+3369,EIP-681: move to Last Call,EIPs,681,Last Call
+3256,EIP-681: move to Final,EIPs,681,Final
+3139,EIP-2681: move to last call,EIPs,2681,Last Call
+1994,EIP-1344: Move to Final after Last Call Review,EIPs,1344,Final After Last Call Review
+1944,EIP-1344: Move to Last Call,EIPs,1344,Last Call
+1460,EIP-627: move to Networking category,EIPs,627,Networking Category
+8880,Update EIP-6493: Move to Draft,EIPs,6493,Draft
+8879,Update EIP-6404: Move to Draft,EIPs,6404,Draft
+8878,Update EIP-6466: Move to Draft,EIPs,6466,Draft
+8877,Update EIP-6465: Move to Draft,EIPs,6465,Draft
+8912,Update EIP-7762: Move to Review,EIPs,7762,Review
+8970,Update EIP-6913: Move to Withdrawn,EIPs,6913,Withdrawn
+9021,Update EIP-7610: Move to Last Call,EIPs,7610,Last Call
+9019,Update EIP-7587: Move to Final,EIPs,7587,Final
+9033,Update EIP-6888: Move to Draft,EIPs,6888,Draft
+9063,Update EIP-4803: Move to Review,EIPs,4803,Review
+9061,Update EIP-6690: Move to Draft,EIPs,6690,Draft
+9078,Update EIP-3670: Move to Review,EIPs,3670,Review
+9062,Update EIP-7762: Move to Draft,EIPs,7762,Draft
+9108,Update EIP-7784: Move to Review,EIPs,7784,Review
+9132,Update EIP-6916: Move to Last Call,EIPs,6916,Last Call
+9114,Update EIP-7709: Move to Stagnant,EIPs,7709,Stagnant
+9093,Update EIP-7542: Move to Withdrawn,EIPs,7542,Withdrawn
+9095,Update EIP-7691: Move to Review,EIPs,7691,Review
+9080,Update EIP-7503: Move to Draft,EIPs,7503,Draft
+9167,Update EIP-7808: Move to Review,EIPs,7808,Review
+9172,Update EIP-7709: Move to Stagnant,EIPs,7709,Stagnant
+9139,Update EIP-7591: Move to Stagnant,EIPs,7591,Stagnant
+9173,Update EIP-7716: Move to Stagnant,EIPs,7716,Stagnant
+9170,Update EIP-7594: Move to Stagnant,EIPs,7594,Stagnant
+9239,Update EIP-7549: Move to Review,EIPs,7549,Review
+9235,Update EIP-7519: Move to Draft,EIPs,7519,Draft
+9223,Update EIP-7840: Move to Review,EIPs,7840,Review
+9199,Update EIP-101: Move to Draft,EIPs,101,Draft
+9266,Update EIP-1898: Move to Review,EIPs,1898,Review
+9265,Update EIP-7830: Move to Review,EIPs,7830,Review
+9272,Update EIP-7823: Move to Review,EIPs,7823,Review
+9338,Update EIP-7702: Move to Last Call,EIPs,7702,Last Call
+9336,Update EIP-2935: Move to Last Call,EIPs,2935,Last Call
+9360,Update EIP-7691: Move to Last Call,EIPs,7691,Last Call
+9359,Update EIP-7623: Move to Last Call,EIPs,7623,Last Call
+9339,Update EIP-7840: Move to Last Call,EIPs,7840,Last Call
+9337,Update EIP-7691: Move to Last Call,EIPs,7691,Last Call
+9335,Update EIP-2537: Move to Last Call,EIPs,2537,Last Call
+9334,Update EIP-7723: Move to Last Call,EIPs,7723,Last Call
+9330,Update EIP-3300: Move to Draft,EIPs,3300,Draft
+9329,Update EIP-7251: Move to Last Call,EIPs,7251,Last Call
+9328,Update EIP-7002: Move to Last Call,EIPs,7002,Last Call
+9327,Update EIP-7685: Move to Last Call,EIPs,7685,Last Call
+9326,Update EIP-6110: Move to Last Call,EIPs,6110,Last Call
+9333,Update EIP-7600: Move to Last Call,EIPs,7600,Last Call
+9317,Update EIP-7549: Move to Last Call,EIPs,7549,Last Call
+9370,Update EIP-1898: Move to Last Call,EIPs,1898,Last Call
+9154,Update EIP-7675: Move to Withdrawn,EIPs,7675,Withdrawn
+9400,Update EIP-3155: Move to Last Call,EIPs,3155,Last Call
+9385,Update EIP-3540: Move to Review,EIPs,3540,Review
+9389,Update EIP-5920: Move to Draft,EIPs,5920,Draft
+9412,Update EIP-7620: Move to Review,EIPs,7620,Review
+9397,Update EIP-3155: Move to Stagnant,EIPs,3155,Stagnant
+9458,Update EIP-4750: Move to Review,EIPs,4750,Review
+9386,Update EIP-4750: Move to Review,EIPs,4750,Review
+9527,Update EIP-663: Move to Review,EIPs,663,Review
+9507,Update EIP-7870: Move to Review,EIPs,7870,Review
+9587,Update EIP-7594: Move to Review,EIPs,7594,Review
+9613,Update EIP-7880: Move to Review,EIPs,7880,Review
+9612,Update EIP-7873: Move to Review,EIPs,7873,Review
+9610,Update EIP-7761: Move to Review,EIPs,7761,Review
+9609,Update EIP-7834: Move to Review,EIPs,7834,Review
+9566,Update EIP-7872: Move to Review,EIPs,7872,Review
+9554,Update EIP-7918: Move to Review,EIPs,7918,Review
+9472,Update EIP-1898: Move to Final,EIPs,1898,Final
+9237,Update EIP-7642: Move to Draft,EIPs,7642,Draft
+9511,Update EIP-7708: Move to Stagnant,EIPs,7708,Stagnant
+9611,Update EIP-5920: Move to Review,EIPs,5920,Review
+9641,Update EIP-7642: Move to Review,EIPs,7642,Review
+9626,Update EIP-7600: Move to Last Call,EIPs,7600,Last Call
+9446,Update EIP-3540: Move to Review,EIPs,3540,Review
+9663,Update EIP-5792: Move to Last Call,EIPs,5792,Last Call
+9685,Update EIP-6916: Move to Final,EIPs,6916,Final
+9741,Update EIP-2537: Move to Final,EIPs,2537,Final
+9738,Update EIP-5792: Move to Final,EIPs,5792,Final
+9743,Update EIP-2537: Move to Final,EIPs,2537,Final
+9384,Update EIP-5920: Move to Draft,EIPs,5920,Draft
+9771,Update EIP-3074: Move to Withdrawn,EIPs,3074,Withdrawn
+9754,Update EIP-7840: Move to Final,EIPs,7840,Final
+9752,Update EIP-7691: Move to Final,EIPs,7691,Final
+9751,Update EIP-7685: Move to Final,EIPs,7685,Final
+9750,Update EIP-7623: Move to Final,EIPs,7623,Final
+9749,Update EIP-7549: Move to Final,EIPs,7549,Final
+9748,Update EIP-7251: Move to Final,EIPs,7251,Final
+9747,Update EIP-7002: Move to Final,EIPs,7002,Final
+9746,Update EIP-6110: Move to Final,EIPs,6110,Final
+9742,Update EIP-2935: Move to Final,EIPs,2935,Final
+9790,Update EIP-7932: Move to Review,EIPs,7932,Review
+9837,Update EIP-7788: Move to Withdrawn,EIPs,7788,Withdrawn
+9799,Update EIP-7782: Move to Draft,EIPs,7782,Draft
+9753,Update EIP-7702: Move to Final,EIPs,7702,Final
+9857,Update EIP-7642: Move to Final,EIPs,7642,Final
+9853,Update EIP-7932: Move to Review,EIPs,7932,Review
+9836,Update EIP-7843: Move to Review,EIPs,7843,Review
+9802,Update EIP-7778: Move to Draft,EIPs,7778,Draft
+9774,Update EIP-7773: Move to Draft,EIPs,7773,Draft
+9740,Update EIP-7600: Move to Final,EIPs,7600,Final
+9856,Update EIP-7773: Move to Draft,EIPs,7773,Draft
+9882,Update EIP-7950: Move to Review,EIPs,7950,Review
+9870,Update EIP-7825: Move to Stagnant,EIPs,7825,Stagnant
+9594,Update EIP-867: Move to Draft,EIPs,867,Draft
+9538,Update EIP-7668: Move to Draft,EIPs,7668,Draft
+18,Update EIP-7092: Move to Review,ERCs,7092,Review
+17,Update EIP-7092: Move to Review,ERCs,7092,Review
+15,Update EIP-7092: Move to Review,ERCs,7092,Review
+11,Update EIP-7528: Move to Review,ERCs,7528,Review
+7,Update EIP-6357: Move to Last Call,ERCs,6357,Last Call

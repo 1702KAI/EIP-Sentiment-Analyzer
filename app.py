@@ -3,9 +3,7 @@ import logging
 import uuid
 import threading
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
-from flask_login import LoginManager, login_user, logout_user, current_user, login_required
-from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.utils import secure_filename
@@ -23,12 +21,6 @@ db = SQLAlchemy(model_class=Base)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
-
-# Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
 
 # Database configuration
 database_url = os.environ.get("DATABASE_URL")
@@ -56,28 +48,49 @@ app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-@login_manager.user_loader
-def load_user(user_id):
-    from models import User
-    return db.session.get(User, user_id)
+# Define models here to avoid circular imports
+class AnalysisJob(db.Model):
+    id = db.Column(db.String(36), primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.String(20), default='queued')
+    progress = db.Column(db.Integer, default=0)
+    stage = db.Column(db.String(255), default='Queued for processing...')
+    error_message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    
+    output_files = db.relationship('OutputFile', backref='job', lazy=True, cascade='all, delete-orphan')
 
-def require_admin(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            flash('Please log in to access this feature.', 'warning')
-            return redirect(url_for('login'))
-        
-        if not current_user.is_admin:
-            flash('Admin access required for this feature.', 'error')
-            return redirect(url_for('index'))
+class OutputFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.String(50))
+    file_size = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-        return f(*args, **kwargs)
-    return decorated_function
+class EIPSentiment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.String(36), db.ForeignKey('analysis_job.id'), nullable=False)
+    eip = db.Column(db.String(10), nullable=False)
+    unified_compound = db.Column(db.Float)
+    unified_pos = db.Column(db.Float)
+    unified_neg = db.Column(db.Float)
+    unified_neu = db.Column(db.Float)
+    total_comment_count = db.Column(db.Integer)
+    category = db.Column(db.String(100))
+    status = db.Column(db.String(50))
+    title = db.Column(db.Text)
+    author = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (db.Index('idx_eip_job', 'eip', 'job_id'),)
 
-# Initialize database tables after app configuration
+# Initialize database tables
 with app.app_context():
-    from models import User, AnalysisJob, OutputFile, EIPSentiment
     db.create_all()
 
 def allowed_file(filename):
@@ -88,7 +101,6 @@ def process_csv_background(job_id, filepath, output_dir):
     
     try:
         with app.app_context():
-            from models import AnalysisJob, OutputFile, EIPSentiment
             # Update job status to processing
             job = AnalysisJob.query.get(job_id)
             if not job:
@@ -124,11 +136,9 @@ def process_csv_background(job_id, filepath, output_dir):
             
             final_output = analyzer.run_stage3(output_dir)
             
-            # Save output files to database - handle both single file and list returns
-            output_files = final_output if isinstance(final_output, list) else [final_output] if final_output else []
-            
-            for file_path in output_files:
-                if file_path and os.path.exists(file_path):
+            # Save output files to database
+            for file_path in final_output:
+                if os.path.exists(file_path):
                     filename = os.path.basename(file_path)
                     file_type = 'unknown'
                     if 'final_merged' in filename:
@@ -147,7 +157,7 @@ def process_csv_background(job_id, filepath, output_dir):
                     db.session.add(output_file)
             
             # Save sentiment data if final merged file exists
-            final_file = next((f for f in output_files if f and 'final_merged' in f), None)
+            final_file = next((f for f in final_output if 'final_merged' in f), None)
             if final_file and os.path.exists(final_file):
                 try:
                     df = pd.read_csv(final_file)
@@ -245,84 +255,13 @@ def process_csv_background(job_id, filepath, output_dir):
 def index():
     return render_template('index.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
-@app.route('/login', methods=['POST'])
-def login_post():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    
-    # Simple admin authentication - you can replace this with your preferred method
-    admin_credentials = {
-        'admin@example.com': 'admin123',
-        'admin@sentiment.com': 'password123'
-    }
-    
-    if email in admin_credentials and admin_credentials[email] == password:
-        # Create or get user
-        from models import User
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            user = User(
-                id=str(uuid.uuid4()),
-                email=email,
-                first_name='Admin',
-                last_name='User',
-                is_admin=True
-            )
-            db.session.add(user)
-            db.session.commit()
-        
-        login_user(user)
-        flash(f'Welcome back, {user.first_name}! Admin access granted.', 'success')
-        # Redirect to the page they were trying to access, or admin dashboard
-        next_page = request.args.get('next')
-        if next_page:
-            return redirect(next_page)
-        return redirect(url_for('admin_dashboard'))
-    else:
-        flash('Invalid email or password.', 'error')
-        return redirect(url_for('login'))
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('Logged out successfully.', 'info')
-    return redirect(url_for('index'))
-
-@app.route('/admin')
-@require_admin
-def admin_dashboard():
-    """Admin dashboard with quick access to all admin functions"""
-    from models import AnalysisJob, EIPSentiment
-    
-    # Get recent jobs and statistics
-    recent_jobs = AnalysisJob.query.order_by(AnalysisJob.created_at.desc()).limit(5).all()
-    total_jobs = AnalysisJob.query.count()
-    completed_jobs = AnalysisJob.query.filter_by(status='completed').count()
-    total_eips_analyzed = EIPSentiment.query.count()
-    
-    stats = {
-        'total_jobs': total_jobs,
-        'completed_jobs': completed_jobs,
-        'failed_jobs': AnalysisJob.query.filter_by(status='failed').count(),
-        'processing_jobs': AnalysisJob.query.filter_by(status='processing').count(),
-        'total_eips_analyzed': total_eips_analyzed
-    }
-    
-    return render_template('admin_dashboard.html', recent_jobs=recent_jobs, stats=stats)
-
 @app.route('/upload')
-@require_admin
 def upload_page():
     return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
-@require_admin
 def upload_file():
+    
     if 'file' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.url)
@@ -332,11 +271,7 @@ def upload_file():
         flash('No file selected', 'error')
         return redirect(request.url)
     
-    if not (file and file.filename and allowed_file(file.filename)):
-        flash('Invalid file type. Please upload a CSV file.', 'error')
-        return redirect(request.url)
-    
-    try:
+    if file and file.filename and allowed_file(file.filename):
         filename = secure_filename(str(file.filename))
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_filename = f"{timestamp}_{filename}"
@@ -354,12 +289,10 @@ def upload_file():
                 return redirect(request.url)
         except Exception as e:
             flash(f'Error reading CSV file: {str(e)}', 'error')
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            os.remove(filepath)
             return redirect(request.url)
         
         # Create job in database
-        from models import AnalysisJob
         job_id = str(uuid.uuid4())
         output_dir = os.path.join(app.config['OUTPUT_FOLDER'], job_id)
         os.makedirs(output_dir, exist_ok=True)
@@ -381,14 +314,13 @@ def upload_file():
         
         flash('File uploaded successfully! Processing started.', 'success')
         return redirect(url_for('job_status', job_id=job_id))
-        
-    except Exception as e:
-        flash(f'Upload failed: {str(e)}', 'error')
-        return redirect(request.url)
+    
+    flash('Invalid file type. Please upload a CSV file.', 'error')
+    return redirect(request.url)
 
 @app.route('/job/<job_id>')
 def job_status(job_id):
-    from models import AnalysisJob
+    
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -398,7 +330,7 @@ def job_status(job_id):
 
 @app.route('/api/job/<job_id>/status')
 def api_job_status(job_id):
-    from models import AnalysisJob
+    
     job = AnalysisJob.query.get(job_id)
     if not job:
         return jsonify({'error': 'Job not found'}), 404
@@ -414,7 +346,7 @@ def api_job_status(job_id):
 
 @app.route('/download/<job_id>/<filename>')
 def download_file(job_id, filename):
-    from models import AnalysisJob, OutputFile
+    
     job = AnalysisJob.query.get(job_id)
     if not job:
         flash('Job not found', 'error')
@@ -428,17 +360,15 @@ def download_file(job_id, filename):
     return send_file(output_file.file_path, as_attachment=True)
 
 @app.route('/results')
-@require_admin
 def results():
-    from models import AnalysisJob
+    
     # Show all completed jobs
-    completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
+    completed_jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.completed_at.desc()).all()
     return render_template('results.html', jobs=completed_jobs)
 
 @app.route('/dashboard')
 def dashboard():
     """Dashboard with sentiment analysis visualizations"""
-    from models import AnalysisJob, EIPSentiment
     # Get all completed jobs for selection
     jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
     
@@ -522,10 +452,8 @@ def dashboard():
                          **dashboard_stats)
 
 @app.route('/api/export/dashboard/<job_id>')
-@require_admin
 def export_dashboard_data(job_id):
     """Export dashboard data as CSV"""
-    from models import AnalysisJob, EIPSentiment
     job = AnalysisJob.query.get_or_404(job_id)
     sentiment_data = EIPSentiment.query.filter_by(job_id=job_id).all()
     
@@ -576,7 +504,6 @@ def export_dashboard_data(job_id):
 @app.route('/smart-contract')
 def smart_contract():
     """Smart Contract Generator page"""
-    from models import AnalysisJob, EIPSentiment
     # Get all completed jobs for selection
     jobs = AnalysisJob.query.filter_by(status='completed').order_by(AnalysisJob.created_at.desc()).all()
     
@@ -664,9 +591,6 @@ def analyze_security():
     """Analyze smart contract security using OpenAI"""
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
-        
         contract_code = data.get('contract_code')
         
         if not contract_code:
@@ -689,9 +613,6 @@ def generate_tests():
     """Generate test suite for smart contract using OpenAI"""
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
-        
         contract_code = data.get('contract_code')
         contract_name = data.get('contract_name', 'Contract')
         
@@ -715,9 +636,6 @@ def analyze_code_and_recommend():
     """Analyze smart contract code and recommend EIPs with sentiment warnings"""
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
-        
         job_id = data.get('job_id')
         contract_code = data.get('contract_code')
         analysis_type = data.get('analysis_type', 'comprehensive')
@@ -730,7 +648,6 @@ def analyze_code_and_recommend():
             return jsonify({'success': False, 'error': 'Job ID is required'})
         
         # Get EIP data based on status filter
-        from models import EIPSentiment
         query = EIPSentiment.query.filter_by(job_id=job_id)
         
         if eip_status_filter == 'final_only':

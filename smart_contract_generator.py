@@ -6,10 +6,7 @@ from openai import OpenAI
 class EIPCodeGenerator:
     def __init__(self):
         """Initialize the EIP code generator with OpenAI client"""
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
-        self.client = OpenAI(api_key=api_key, timeout=45.0)
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         
     def generate_eip_implementation(self, eip_data, contract_type, custom_prompt=None):
         """
@@ -61,36 +58,25 @@ Make sure the contract is complete and deployable.
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=3000,
-                temperature=0.1,  # Low temperature for consistent code generation
-                timeout=45.0
+                max_tokens=4000,
+                temperature=0.1  # Low temperature for consistent code generation
             )
 
             generated_code = response.choices[0].message.content
 
             return {
                 "success": True,
-                "contract_code": generated_code,  # Expected by tests
-                "generated_code": generated_code,
                 "eip_number": eip_data.get('eip', 'N/A'),
                 "contract_type": contract_type,
+                "generated_code": generated_code,
                 "eip_metadata": eip_data
             }
 
         except Exception as e:
-            error_msg = str(e)
-            if "timeout" in error_msg.lower() or "read timeout" in error_msg.lower():
-                # Generate a fallback contract template when API times out
-                return self._generate_fallback_contract(eip_data, contract_type)
-            elif "rate limit" in error_msg.lower():
-                error_msg = "API rate limit exceeded. Please wait a moment and try again."
-            elif "invalid" in error_msg.lower() and "key" in error_msg.lower():
-                error_msg = "OpenAI API key is invalid or missing."
-            
-            logging.error(f"Code generation failed: {error_msg}")
+            logging.error(f"Code generation failed: {str(e)}")
             return {
                 "success": False,
-                "error": error_msg,
+                "error": f"Code generation failed: {str(e)}",
                 "eip_number": eip_data.get('eip', 'N/A'),
                 "contract_type": contract_type
             }
@@ -99,13 +85,6 @@ Make sure the contract is complete and deployable.
         """
         AI-powered security analysis of smart contract code
         """
-        # Validate input
-        if not contract_code or not contract_code.strip():
-            return {
-                "success": False,
-                "error": "Contract code cannot be empty"
-            }
-        
         try:
             analysis_prompt = f"""
 Analyze this Solidity smart contract for security vulnerabilities, gas optimization opportunities, and best practices:
@@ -130,8 +109,7 @@ Format the response as structured text with clear sections and severity levels.
                 model="gpt-4o",
                 messages=[{"role": "user", "content": analysis_prompt}],
                 max_tokens=2000,
-                temperature=0.2,
-                timeout=45.0
+                temperature=0.2
             )
 
             return {
@@ -270,7 +248,6 @@ Focus on EIPs that are actually implemented or could be implemented by this code
             return {
                 "success": True,
                 "analysis": analysis_text,
-                "recommendations": eip_recs,  # Expected by tests
                 "eip_recommendations": eip_recs
             }
 
@@ -287,142 +264,3 @@ Focus on EIPs that are actually implemented or could be implemented by this code
         for eip in eip_data_list[:50]:  # Limit to first 50 EIPs to avoid token limits
             formatted.append(f"EIP-{eip.eip}: {eip.title} (Status: {eip.status}, Category: {eip.category})")
         return "\n".join(formatted)
-
-    def _generate_fallback_contract(self, eip_data, contract_type):
-        """Generate a basic contract template when AI is unavailable"""
-        eip_number = eip_data.get('eip', '20')
-        
-        if contract_type == 'ERC20' or eip_number == '20':
-            fallback_code = '''// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract ERC20Token {
-    string public name;
-    string public symbol;
-    uint8 public decimals = 18;
-    uint256 public totalSupply;
-    
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
-    
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    
-    constructor(string memory _name, string memory _symbol, uint256 _totalSupply) {
-        name = _name;
-        symbol = _symbol;
-        totalSupply = _totalSupply * 10**decimals;
-        balanceOf[msg.sender] = totalSupply;
-        emit Transfer(address(0), msg.sender, totalSupply);
-    }
-    
-    function transfer(address to, uint256 value) public returns (bool) {
-        require(to != address(0), "Transfer to zero address");
-        require(balanceOf[msg.sender] >= value, "Insufficient balance");
-        
-        balanceOf[msg.sender] -= value;
-        balanceOf[to] += value;
-        emit Transfer(msg.sender, to, value);
-        return true;
-    }
-    
-    function approve(address spender, uint256 value) public returns (bool) {
-        allowance[msg.sender][spender] = value;
-        emit Approval(msg.sender, spender, value);
-        return true;
-    }
-    
-    function transferFrom(address from, address to, uint256 value) public returns (bool) {
-        require(to != address(0), "Transfer to zero address");
-        require(balanceOf[from] >= value, "Insufficient balance");
-        require(allowance[from][msg.sender] >= value, "Insufficient allowance");
-        
-        balanceOf[from] -= value;
-        balanceOf[to] += value;
-        allowance[from][msg.sender] -= value;
-        emit Transfer(from, to, value);
-        return true;
-    }
-}'''
-        elif contract_type == 'ERC721' or eip_number == '721':
-            fallback_code = '''// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract ERC721Token {
-    string public name;
-    string public symbol;
-    uint256 private _tokenIdCounter;
-    
-    mapping(uint256 => address) public ownerOf;
-    mapping(address => uint256) public balanceOf;
-    mapping(uint256 => address) public getApproved;
-    mapping(address => mapping(address => bool)) public isApprovedForAll;
-    
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
-    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-    
-    constructor(string memory _name, string memory _symbol) {
-        name = _name;
-        symbol = _symbol;
-    }
-    
-    function mint(address to) public returns (uint256) {
-        uint256 tokenId = _tokenIdCounter++;
-        ownerOf[tokenId] = to;
-        balanceOf[to]++;
-        emit Transfer(address(0), to, tokenId);
-        return tokenId;
-    }
-    
-    function approve(address to, uint256 tokenId) public {
-        address owner = ownerOf[tokenId];
-        require(to != owner, "Approval to current owner");
-        require(msg.sender == owner || isApprovedForAll[owner][msg.sender], "Not owner nor approved");
-        
-        getApproved[tokenId] = to;
-        emit Approval(owner, to, tokenId);
-    }
-    
-    function transferFrom(address from, address to, uint256 tokenId) public {
-        require(ownerOf[tokenId] == from, "Transfer from incorrect owner");
-        require(to != address(0), "Transfer to zero address");
-        require(msg.sender == from || getApproved[tokenId] == msg.sender || isApprovedForAll[from][msg.sender], 
-                "Not owner nor approved");
-        
-        balanceOf[from]--;
-        balanceOf[to]++;
-        ownerOf[tokenId] = to;
-        delete getApproved[tokenId];
-        
-        emit Transfer(from, to, tokenId);
-    }
-}'''
-        else:
-            fallback_code = f'''// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract EIP{eip_number}Contract {{
-    address public owner;
-    
-    event ContractDeployed(address indexed deployer);
-    
-    modifier onlyOwner() {{
-        require(msg.sender == owner, "Not the contract owner");
-        _;
-    }}
-    
-    constructor() {{
-        owner = msg.sender;
-        emit ContractDeployed(msg.sender);
-    }}
-}}'''
-        
-        return {
-            "success": True,
-            "contract_code": fallback_code,
-            "generated_code": fallback_code,
-            "eip_number": eip_number,
-            "contract_type": contract_type,
-            "eip_metadata": eip_data
-        }

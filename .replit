@@ -2,14 +2,14 @@ modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["chromium", "freetype", "geckodriver", "glibcLocales", "imagemagick", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "poppler", "postgresql", "tcl", "tk", "zlib"]
+packages = ["glibcLocales", "openssl", "postgresql"]
 
 [deployment]
 deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
-runButton = "Run Flask App"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -40,15 +40,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "uv add pandas nltk requests"
-
-[[workflows.workflow]]
-name = "Run Flask App"
-author = 18171939
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python app.py"
 
 [[ports]]
 localPort = 5000

@@ -1,0 +1,553 @@
+Let's build a tool from pythong that has an admin panel to upload .csv files 
+
+1. Sentiment Analyzer
+
+it's a 3 stage pipeline, 
+
+The first stage  import pandas as pd
+import re
+import nltk
+import requests
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+# === STEP 0: Setup ===
+nltk.download("vader_lexicon")
+print("🚀 Starting unified EIP/ERC sentiment + metadata analysis pipeline...")
+
+# === STEP 1: Load Raw Comment Data ===
+input_file = "ethereum_magicians_comments.csv"
+print(f"📥 Loading data from '{input_file}'...")
+df = pd.read_csv(input_file)
+df.columns = df.columns.str.strip().str.lower()
+
+# Combine paragraphs, headings, and unordered lists into one text column
+df["text"] = df[["paragraphs", "headings", "unordered_lists"]].fillna("").agg(" ".join, axis=1)
+
+# === STEP 2: Apply VADER Sentiment Analysis ===
+print("🧠 Running VADER sentiment analysis...")
+analyzer = SentimentIntensityAnalyzer()
+scores = df["text"].apply(lambda x: analyzer.polarity_scores(x)).apply(pd.Series)
+df = pd.concat([df, scores], axis=1)
+
+# === STEP 3: Extract EIP and ERC Numbers ===
+print("🔍 Extracting EIP and ERC identifiers...")
+df["eip_num"] = df["topic"].str.extract(r"eip-?(\d{2,5})", flags=re.IGNORECASE)
+df["erc_num"] = df["topic"].str.extract(r"erc-?(\d{2,5})", flags=re.IGNORECASE)
+
+df["eip"] = df["eip_num"].dropna().astype(int).astype(str)
+df["erc"] = df["erc_num"].dropna().astype(int).astype(str)
+
+# === STEP 4: Group and Average Sentiment for EIPs ===
+print("📊 Aggregating sentiment for EIPs...")
+grouped_eip = df.dropna(subset=["eip"]).groupby("eip").agg({
+    "compound": "mean",
+    "pos": "mean",
+    "neg": "mean",
+    "neu": "mean",
+    "text": "count"
+}).reset_index()
+grouped_eip.columns = ["eip", "avg_compound", "avg_pos", "avg_neg", "avg_neu", "comment_count"]
+
+# === STEP 5: Group and Average Sentiment for ERCs ===
+print("📊 Aggregating sentiment for ERCs...")
+grouped_erc = df.dropna(subset=["erc"]).groupby("erc").agg({
+    "compound": "mean",
+    "pos": "mean",
+    "neg": "mean",
+    "neu": "mean",
+    "text": "count"
+}).reset_index()
+grouped_erc.columns = ["erc", "avg_compound", "avg_pos", "avg_neg", "avg_neu", "comment_count"]
+
+# === STEP 6: Merge EIP and ERC Sentiment ===
+print("🔗 Merging EIP and ERC sentiment...")
+erc_df = grouped_erc.rename(columns={
+    "erc": "eip",
+    "avg_compound": "erc_avg_compound",
+    "avg_pos": "erc_avg_pos",
+    "avg_neg": "erc_avg_neg",
+    "avg_neu": "erc_avg_neu",
+    "comment_count": "erc_comment_count"
+})
+merged = pd.merge(grouped_eip, erc_df, on="eip", how="outer")
+merged.fillna(0, inplace=True)
+
+# === STEP 7: Unified Sentiment Scores ===
+print("📈 Calculating unified sentiment scores...")
+total_comments = merged["comment_count"] + merged["erc_comment_count"] + 1e-5
+
+merged["unified_compound"] = (
+    (merged["avg_compound"] * merged["comment_count"] +
+     merged["erc_avg_compound"] * merged["erc_comment_count"]) / total_comments
+)
+
+merged["unified_pos"] = (
+    (merged["avg_pos"] * merged["comment_count"] +
+     merged["erc_avg_pos"] * merged["erc_comment_count"]) / total_comments
+)
+
+merged["unified_neg"] = (
+    (merged["avg_neg"] * merged["comment_count"] +
+     merged["erc_avg_neg"] * merged["erc_comment_count"]) / total_comments
+)
+
+merged["unified_neu"] = (
+    (merged["avg_neu"] * merged["comment_count"] +
+     merged["erc_avg_neu"] * merged["erc_comment_count"]) / total_comments
+)
+
+# === STEP 8: Add Total Comment Count ===
+merged["total_comment_count"] = merged["comment_count"] + merged["erc_comment_count"]
+
+# === STEP 9: Fetch EIP Metadata from API ===
+print("🌐 Fetching EIP metadata from EIPsInsight API...")
+url = "https://eipsinsight.com/api/new/all"
+try:
+    resp = requests.get(url)
+    resp.raise_for_status()
+    data = resp.json()
+except Exception as e:
+    print(f"❌ API request failed: {e}")
+    exit()
+
+# Flatten and convert to DataFrame
+all_entries = []
+for key in data:
+    all_entries.extend(data[key])
+print(f"✅ Total proposals found: {len(all_entries)}")
+
+status_df = pd.json_normalize(all_entries)
+status_df.columns = status_df.columns.str.strip().str.lower()
+
+# Select essential metadata
+columns = ["eip", "status", "title", "author", "category", "type", "created"]
+columns = [col for col in columns if col in status_df.columns]
+status_df = status_df[columns]
+status_df["eip"] = status_df["eip"].astype(str).str.strip()
+
+#output_file = "eip_status_data.csv"
+status_df.to_csv("eip_status_data.csv", index=False)
+
+# === STEP 10: Merge with Metadata ===
+print("🔗 Merging sentiment with EIP metadata...")
+merged["eip"] = merged["eip"].astype(str).str.strip()
+final_merged = pd.merge(merged, status_df, on="eip", how="inner")
+print(f"✅ Merged {len(final_merged)} rows with metadata")
+
+# === STEP 11: Final Output Filter ===
+columns_to_keep = [
+    "eip",
+    "unified_compound",
+    "unified_pos",
+    "unified_neg",
+    "unified_neu",
+    "total_comment_count",
+    "category"
+]
+final_df = final_merged[[col for col in columns_to_keep if col in final_merged.columns]]
+
+# === STEP 12: Export Final Files ===
+final_merged.to_csv("enriched_sentiment_with_status.csv", index=False)
+final_df.to_csv("unified_sentiment_summary.csv", index=False)
+print("\n💾 Saved:")
+print("• Full enriched data ➤ 'enriched_sentiment_with_status.csv'")
+print("• Filtered summary ➤ 'unified_sentiment_summary.csv'")
+
+Then the second stage import os
+import json
+import re
+import ast
+import requests
+import pandas as pd
+
+# === STEP 0: Setup ===
+output_folder = "eipsinsight_data"
+os.makedirs(output_folder, exist_ok=True)
+
+endpoints = {
+    "all_eips": "https://eipsinsight.com/api/new/all",
+    "graphsv4": "https://eipsinsight.com/api/new/graphsv4",
+    "all_prs": "https://eipsinsight.com/api/allprs",
+    "reviewers_all": "https://eipsinsight.com/api/ReviewersCharts/data/all"
+}
+
+print("📡 Fetching data from EIPs Insight APIs...\n")
+
+for name, url in endpoints.items():
+    print(f"🔄 Fetching '{name}' from {url} ...")
+    try:
+        response = requests.get(url, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+
+        if isinstance(data, list):
+            df = pd.DataFrame(data)
+        elif isinstance(data, dict):
+            all_items = []
+            for key in data:
+                try:
+                    all_items.extend(data[key])
+                except TypeError:
+                    all_items.append(data[key])
+            df = pd.DataFrame(all_items)
+        else:
+            raise ValueError("Unsupported JSON structure")
+
+        output_path = os.path.join(output_folder, f"{name}.csv")
+        df.to_csv(output_path, index=False)
+        print(f"✅ Saved '{output_path}' with {len(df)} rows.\n")
+    except Exception as err:
+        print(f"❌ Failed to fetch {name}: {err}\n")
+
+# === STEP 1: Flatten graphsv4 ===
+print("📥 Flattening transition data...")
+graphsv4_data = requests.get(endpoints["graphsv4"]).json()
+eip_transitions = graphsv4_data.get("eip", [])
+df_transitions = pd.DataFrame(eip_transitions)
+
+if 'eip' in df_transitions.columns:
+    df_transitions['eip'] = pd.to_numeric(df_transitions['eip'], errors='coerce', downcast='integer')
+
+if 'changeDate' in df_transitions.columns:
+    df_transitions['changeDate'] = pd.to_datetime(df_transitions['changeDate'], errors='coerce')
+
+if 'created' in df_transitions.columns:
+    df_transitions['created'] = pd.to_datetime(df_transitions['created'], errors='coerce')
+
+df_transitions.to_csv("graphsv4_transitions.csv", index=False)
+print("✅ Saved: graphsv4_transitions.csv\n")
+
+# === STEP 2: Extract 'Move to' PRs ===
+print("📥 Extracting proposed status changes...")
+df_prs = pd.read_csv(os.path.join(output_folder, "all_prs.csv"))
+move_to_df = df_prs[df_prs['prTitle'].str.contains("Move to", case=False, na=False)].copy()
+
+def extract_eip_and_status(title):
+    eip_match = re.search(r'EIP[-\s]?(\d+)', title, re.IGNORECASE)
+    status_match = re.search(r'Move to ([\w\s]+)', title, re.IGNORECASE)
+    eip = int(eip_match.group(1)) if eip_match else None
+    status = status_match.group(1).strip().title() if status_match else None
+    return pd.Series({'eip': eip, 'proposed_status': status})
+
+move_to_df[['eip', 'proposed_status']] = move_to_df['prTitle'].apply(extract_eip_and_status)
+move_to_df.dropna(subset=['eip', 'proposed_status'], inplace=True)
+move_to_df['eip'] = move_to_df['eip'].astype(int)
+move_to_df.to_csv("proposed_status_changes_from_prs.csv", index=False)
+print("✅ Saved: proposed_status_changes_from_prs.csv\n")
+
+# === STEP 3: Merge proposed vs current statuses ===
+print("🔍 Checking for status conflicts...")
+status_df = pd.read_csv("graphsv4_transitions.csv").rename(columns={"status": "current_status"})
+status_df['eip'] = status_df['eip'].astype(str)
+move_to_df['eip'] = move_to_df['eip'].astype(str)
+
+merged = pd.merge(move_to_df, status_df, on='eip', how='inner')
+merged['status_conflict'] = merged.apply(
+    lambda row: str(row['proposed_status']).strip().lower() != str(row['current_status']).strip().lower(),
+    axis=1
+)
+merged.to_csv("enriched_pr_with_conflict_flag.csv", index=False)
+
+# === STEP 4: Editor review counts ===
+print("📊 Calculating editor review counts...")
+reviewers_df = pd.read_csv(os.path.join(output_folder, "reviewers_all.csv"))
+all_prs = []
+
+for _, row in reviewers_df.iterrows():
+    try:
+        month = row['monthYear']
+        pr_list = ast.literal_eval(row['PRs'])
+        for pr in pr_list:
+            all_prs.append({
+                'month': month,
+                'prNumber': pr.get('prNumber'),
+                'prTitle': pr.get('prTitle')
+            })
+    except Exception:
+        continue
+
+flat_prs_df = pd.DataFrame(all_prs)
+flat_prs_df['eip'] = flat_prs_df['prTitle'].apply(
+    lambda title: int(re.search(r'EIP[-\s]?(\d+)', str(title), re.IGNORECASE).group(1))
+    if re.search(r'EIP[-\s]?(\d+)', str(title), re.IGNORECASE) else None
+)
+flat_prs_df.dropna(subset=['eip'], inplace=True)
+flat_prs_df['eip'] = flat_prs_df['eip'].astype(int)
+
+review_counts = flat_prs_df.groupby('eip').agg(editor_review_count=('prNumber', 'count')).reset_index()
+review_counts['editor_reviewed'] = True
+
+# === STEP 5: Merge enriched conflict data with review count ===
+print("🔗 Merging conflict and review data...")
+enriched_df = pd.read_csv("enriched_pr_with_conflict_flag.csv")
+enriched_df['eip'] = enriched_df['eip'].astype(int)
+
+
+final_df = pd.merge(enriched_df, review_counts, on='eip', how='left')
+final_df['editor_reviewed'] = final_df['editor_reviewed'].fillna(False)
+final_df['editor_review_count'] = final_df['editor_review_count'].fillna(0).astype(int)
+final_df.to_csv("editor_review_filtered.csv", index=False)
+print("✅ Saved: editor_review_filtered.csv\n")
+
+# === STEP 6: Merge sentiment + review + status ===
+print("📥 Merging sentiment, review, and status metadata...")
+review_df = pd.read_csv("editor_review_filtered.csv")
+sentiment_df = pd.read_csv("unified_sentiment_summary.csv")
+status_meta_df = pd.read_csv("eipsinsight_data/all_eips.csv")
+
+merged_df = pd.merge(review_df, sentiment_df, on="eip", how="outer")
+merged_df = pd.merge(merged_df, status_meta_df, on="eip", how="outer")
+merged_df = merged_df.drop_duplicates()
+
+columns_to_drop = [
+    'title_x', 'author_x', 'category_x', 'status_x', 'type_x',
+    'status_conflict', 'category_y', 'status_y'
+]
+merged_df.drop(columns=[col for col in columns_to_drop if col in merged_df.columns], inplace=True)
+
+merged_df.to_csv("merged_eip_sentiment_reviews.csv", index=False)
+print(f"✅ Merged file: 'merged_eip_sentiment_reviews.csv' ({len(merged_df)} rows)")
+
+# === STEP 7: Append latest transitions and deduplicate ===
+print("📌 Attaching latest transitions and deduplicating by status...")
+reviews_df = pd.read_csv("merged_eip_sentiment_reviews.csv")
+transitions_df = pd.read_csv("graphsv4_transitions.csv")
+
+reviews_df['eip'] = pd.to_numeric(reviews_df['eip'], errors='coerce', downcast='integer')
+transitions_df['eip'] = pd.to_numeric(transitions_df['eip'], errors='coerce', downcast='integer')
+transitions_df['changeDate'] = pd.to_datetime(transitions_df['changeDate'], errors='coerce')
+
+# Remove duplicate column conflicts BEFORE merge
+columns_to_remove = ['repo', 'title', 'author', 'status']  # 'status' will be renamed post-merge
+transitions_df.drop(columns=[c for c in columns_to_remove if c in transitions_df.columns], inplace=True)
+
+latest_transitions = transitions_df.sort_values('changeDate').drop_duplicates('eip', keep='last')
+final_df = pd.merge(reviews_df, latest_transitions, on='eip', how='left')
+
+# Drop other junk columns if they exist
+columns_to_drop = [
+    '_id', 'created', 'type', 'category_y', 'deadline', 'requires', 'pr', 'repo_y',
+    'status_y', 'created_x', 'toStatus', 'createdMonth', 'createdYear',
+    'changedDay', 'changedMonth', '__v', 'changedYear', 'discussion',
+    'unified_pos', 'unified_neg', 'unified_neu'
+]
+final_df.drop(columns=[col for col in columns_to_drop if col in final_df.columns], inplace=True)
+
+# Rename or detect proper status column for priority mapping
+status_column = 'current_status' if 'current_status' in final_df.columns else 'status'
+final_df[status_column] = final_df[status_column].fillna("Unknown")
+
+# Add priority and deduplicate
+status_priority = {
+    'Withdrawn': 0, 'Stagnant': 1, 'Draft': 2, 'Review': 3,
+    'Last Call': 4, 'Final': 5, 'Living': 6, 'Unknown': -1
+}
+final_df['status_priority'] = final_df[status_column].map(status_priority)
+final_df = final_df.sort_values(by=['eip', 'status_priority'], ascending=[True, False])
+final_df = final_df.drop_duplicates(subset='eip', keep='first')
+# drop these prTitle, repo_x, _id_x, toStatus_x, changeDate_x, deadline_x, requires_x, pr_x, changedDay_x, changedMonth_x, changedYear_x, __v_x, _id_y, __v_y, deadline_y, discussion_y, requires_y, deadline_y, discussion_y, requires_y, repo, changedDay_y, changedMonth_y, changedYear_y, creaedMonth_y, createdYear_y
+columns_to_drop = [
+    'prTitle', 'repo_x', '_id_x', 'toStatus_x', 'changeDate_x',
+    'deadline_x', 'requires_x', 'pr_x', 'changedDay_x',
+    'changedMonth_x', 'changedYear_x', '__v_x', '_id_y',
+    '__v_y', 'deadline_y', 'discussion_y', 'requires_y',
+    'repo_y', 'changedDay_y', 'changedMonth_y', 'changedYear_y',
+    'createdMonth_y', 'createdYear_y', 'fromStatus_x', 'createdMonth_x', 'createdYear_x', 'discussion_x', 'prNumber', 'current_status'
+]
+final_df.drop(columns=[col for col in columns_to_drop if col in final_df.columns], inplace=True)
+final_df.drop(columns=['status_priority'], inplace=True)
+
+# Save final file
+final_output = "final_merged_with_transitions.csv"
+final_df.to_csv(final_output, index=False)
+print(f"✅ Final output saved: '{final_output}' with {len(final_df)} rows.")
+
+third stage is   import pandas as pd
+from datetime import datetime
+
+# === STEP 1: Load the dataset ===
+print("📥 Loading CSV...")
+df = pd.read_csv("final_merged_with_transitions.csv")
+
+# === STEP 2: Convert relevant columns ===
+df["unified_compound"] = pd.to_numeric(df["unified_compound"], errors='coerce').fillna(0)
+df["total_comment_count"] = pd.to_numeric(df["total_comment_count"], errors='coerce').fillna(0)
+df["editor_review_count"] = pd.to_numeric(df["editor_review_count"], errors='coerce').fillna(0)
+df["editor_reviewed"] = df["editor_reviewed"].fillna(False).astype(bool)
+df["changeDate_y"] = pd.to_datetime(df["changeDate_y"], errors='coerce').dt.tz_localize(None)
+
+
+# === STEP 3: Filter out final/withdrawn/living ===
+excluded_statuses = ["Final", "Withdrawn", "Living"]
+df = df[~df["status"].isin(excluded_statuses)].copy()
+
+# === STEP 4: Normalize values ===
+max_comments = df["total_comment_count"].max() or 1
+max_reviews = df["editor_review_count"].max() or 1
+current_date = datetime.strptime("2025-06-14", "%Y-%m-%d")
+
+def calculate_score(row):
+    sentiment = max(0, (row["unified_compound"] + 1) / 2)  # normalize to [0, 1]
+    engagement = row["total_comment_count"] / max_comments
+    editor_activity = (row["editor_review_count"] / max_reviews) + (0.5 if row["editor_reviewed"] else 0)
+    recency_days = (current_date - row["changeDate_y"]).days if pd.notna(row["changeDate_y"]) else 365
+    recency = max(0, 1 - recency_days / 365)
+    score = (0.4 * sentiment + 0.3 * engagement + 0.2 * editor_activity + 0.1 * recency) * 100
+    return round(score, 2)
+
+# === STEP 5: Calculate score ===
+print("📊 Calculating scores...")
+df["score"] = df.apply(calculate_score, axis=1)
+
+# === STEP 6: Generate recommendation ===
+def get_recommendation(score):
+    if score > 75:
+        return "Recommended with Caution"
+    elif score > 50:
+        return "Explore with Monitoring"
+    else:
+        return "Not Recommended"
+
+df["recommendation"] = df["score"].apply(get_recommendation)
+
+# === STEP 7: Add Explanation ===
+def generate_explanation(row):
+    parts = []
+    if row["unified_compound"] > 0.3:
+        parts.append("Community sentiment is good")
+    if row["editor_review_count"] == 0 and not row["editor_reviewed"]:
+        parts.append("Work is not evident")
+    if row["score"] > 75:
+        parts.append("Use with caution")
+    return ". ".join(parts) + "."
+
+df["explanation"] = df.apply(generate_explanation, axis=1)
+
+# === STEP 8: Save final output ===
+output_path = "eip_recommendation_scored.csv"
+df.to_csv(output_path, index=False)
+print(f"✅ Scored dataset saved to '{output_path}' with {len(df)} rows.")
+
+2. Smart contract generation based on EIPs  A .csv is uploaded giving context about EIP description and using OPEN AI model 4 i will give you the credentials so prompt me for the API key, here are some examples OpenAI Integration for Code Generation
+Smart Contract Code Generation
+from openai import OpenAI
+import json
+ 
+class EIPCodeGenerator:
+def __init__(self, api_key: str):
+self.client = OpenAI(api_key=api_key)
+
+async def generate_eip_implementation(self, eip_number: int, contract_type: str, custom_prompt: str = None):
+"""
+Generate Solidity smart contract code for EIP implementation
+
+Used for:
+- ERC token standard implementations (ERC-20, ERC-721, ERC-1155)
+- Protocol upgrades and governance contracts
+- Gas optimization examples
+- Security pattern implementations
+"""
+
+# Fetch EIP metadata from database
+eip_data = await self.get_eip_metadata(eip_number)
+
+if not eip_data:
+raise HTTPException(status_code=404, detail="EIP not found")
+
+# Construct intelligent prompt
+system_prompt = f"""
+You are an expert Solidity developer specializing in Ethereum Improvement Proposals.
+Generate production-ready, secure, and gas-optimized smart contract code.
+
+EIP Details:
+- Number: {eip_data['eip_number']}
+- Title: {eip_data['title']}
+- Status: {eip_data['status']}
+- Category: {eip_data['category']}
+- Authors: {eip_data['authors']}
+
+Contract Type: {contract_type}
+"""
+
+user_prompt = custom_prompt or f"""
+Generate a complete Solidity implementation for EIP-{eip_number}: {eip_data['title']}.
+
+Requirements:
+1. Follow the exact specification from the EIP
+2. Include comprehensive error handling
+3. Implement gas optimization patterns
+4. Add detailed NatSpec documentation
+5. Include security considerations
+6. Provide deployment and testing examples
+
+Focus on {contract_type} implementation patterns.
+"""
+
+try:
+response = await self.client.chat.completions.create(
+model="gpt-4", # Use GPT-4 for complex code generation
+messages=[
+{"role": "system", "content": system_prompt},
+{"role": "user", "content": user_prompt}
+],
+max_tokens=4000,
+temperature=0.1 # Low temperature for consistent code generation
+)
+
+generated_code = response.choices[0].message.content
+
+# Store generation in database for history tracking
+await self.store_code_generation(
+eip_number=eip_number,
+contract_type=contract_type,
+prompt=user_prompt,
+generated_code=generated_code
+)
+
+return {
+"eip_number": eip_number,
+"contract_type": contract_type,
+"generated_code": generated_code,
+"eip_metadata": eip_data
+}
+
+except Exception as e:
+raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
+ 
+async def analyze_contract_security(self, contract_code: str):
+"""
+AI-powered security analysis of smart contract code
+
+Used for:
+- Vulnerability detection
+- Gas optimization suggestions
+- Best practice compliance
+- Code quality assessment
+"""
+
+analysis_prompt = f"""
+Analyze this Solidity smart contract for security vulnerabilities, gas optimization opportunities, and best practices:
+ 
+```solidity
+{contract_code}
+```
+ 
+Provide a comprehensive analysis including:
+1. Security vulnerabilities (reentrancy, overflow, access control, etc.)
+2. Gas optimization opportunities
+3. Code quality and best practices
+4. EIP compliance verification
+5. Recommended improvements
+ 
+Format the response as JSON with severity levels.
+"""
+
+response = await self.client.chat.completions.create(
+model="gpt-4",
+messages=[{"role": "user", "content": analysis_prompt}],
+max_tokens=2000,
+temperature=0.2
+)
+
+return response.choices[0].message.content
+   

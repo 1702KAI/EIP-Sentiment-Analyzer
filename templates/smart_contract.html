@@ -59,13 +59,19 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="eipInput" class="form-label">EIP Number</label>
-                                    <input type="number" class="form-control" id="eipInput" 
-                                           placeholder="Enter EIP number (e.g., 20, 721, 1155)" 
-                                           required min="1" max="9999">
-                                    <div class="form-text">
-                                        Enter any EIP number to generate a smart contract implementation.
-                                    </div>
+                                    <label for="eipSelect" class="form-label">Select EIP</label>
+                                    <select class="form-select" id="eipSelect" required>
+                                        <option value="">Choose an EIP...</option>
+                                        {% for eip in sentiment_data %}
+                                        <option value="{{ eip.eip }}" 
+                                                data-title="{{ eip.title or 'N/A' }}"
+                                                data-status="{{ eip.status or 'N/A' }}"
+                                                data-category="{{ eip.category or 'N/A' }}"
+                                                data-author="{{ eip.author or 'N/A' }}">
+                                            EIP-{{ eip.eip }}: {{ eip.title or 'Untitled' }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -114,17 +120,7 @@
                     <h5><i class="fas fa-info-circle me-2"></i>EIP Information</h5>
                 </div>
                 <div class="card-body" id="eipInfo">
-                    <p class="text-muted">Enter an EIP number to generate a contract</p>
-                    <div class="mt-3">
-                        <h6>Popular EIPs:</h6>
-                        <div class="d-flex flex-wrap gap-1">
-                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='20'">EIP-20</button>
-                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='721'">EIP-721</button>
-                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='1155'">EIP-1155</button>
-                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='2612'">EIP-2612</button>
-                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='4626'">EIP-4626</button>
-                        </div>
-                    </div>
+                    <p class="text-muted">Select an EIP to view details</p>
                 </div>
             </div>
         </div>
@@ -331,14 +327,7 @@ function loadJobData() {
     if (jobId) {
         window.location.href = `/smart-contract?job_id=${jobId}`;
     } else {
-        // Switch to manual EIP input
-        document.getElementById('eipSelectContainer').innerHTML = `
-            <input type="number" class="form-control" id="eipInput" placeholder="Enter EIP number (e.g., 20, 721, 1155)" required min="1">
-            <div class="form-text">
-                Enter any EIP number to generate a smart contract implementation.
-            </div>
-        `;
-        document.getElementById('eipInfo').innerHTML = '<p class="text-muted">Enter an EIP number to generate a contract</p>';
+        window.location.href = '/smart-contract';
     }
 }
 
@@ -369,15 +358,12 @@ document.getElementById('eipSelect')?.addEventListener('change', function() {
 document.getElementById('contractForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const eipInput = document.getElementById('eipInput');
+    const eipSelect = document.getElementById('eipSelect');
     const contractType = document.getElementById('contractType').value;
     const customPrompt = document.getElementById('customPrompt').value;
     
-    // Get EIP number from input
-    const eipNumber = eipInput ? eipInput.value : '';
-    
-    if (!eipNumber || !contractType) {
-        alert('Please enter an EIP number and select a contract type');
+    if (!eipSelect.value || !contractType) {
+        alert('Please select both an EIP and contract type');
         return;
     }
     
@@ -392,8 +378,8 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                job_id: document.getElementById('jobSelect').value || null,
-                eip_number: eipNumber,
+                job_id: document.getElementById('jobSelect').value,
+                eip_number: eipSelect.value,
                 contract_type: contractType,
                 custom_prompt: customPrompt
             })
@@ -404,16 +390,11 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
         
         if (result.success) {
             // Store generated contract
-            generatedContract = result.generated_code || result.contract_code;
-            
-            if (!generatedContract) {
-                alert('Error: No contract code received from the generator');
-                return;
-            }
+            generatedContract = result.generated_code;
             
             // Update contract tab with syntax highlighting
             const contractCodeEl = document.getElementById('contractCode');
-            contractCodeEl.textContent = generatedContract;
+            contractCodeEl.textContent = result.generated_code;
             contractCodeEl.className = 'language-solidity';
             
             // Apply syntax highlighting if Prism is available
@@ -429,7 +410,7 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
             // Scroll to results
             document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
         } else {
-            alert('Error generating contract: ' + (result.error || 'Unknown error'));
+            alert('Error generating contract: ' + result.error);
         }
     } catch (error) {
         loadingModal.hide();

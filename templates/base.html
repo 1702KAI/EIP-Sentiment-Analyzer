@@ -26,8 +26,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('smart_contract') }}">
-                            <i class="fas fa-code me-1"></i>Smart Contracts
+                        <a class="nav-link" href="{{ url_for('upload_page') }}">
+                            <i class="fas fa-upload me-1"></i>Upload CSV
                         </a>
                     </li>
                     <li class="nav-item">
@@ -35,15 +35,9 @@
                             <i class="fas fa-chart-bar me-1"></i>Dashboard
                         </a>
                     </li>
-                    {% if current_user.is_authenticated and current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Admin
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('upload_page') }}">
-                            <i class="fas fa-upload me-1"></i>Upload CSV
+                        <a class="nav-link" href="{{ url_for('smart_contract') }}">
+                            <i class="fas fa-code me-1"></i>Smart Contracts
                         </a>
                     </li>
                     <li class="nav-item">
@@ -51,18 +45,6 @@
                             <i class="fas fa-list me-1"></i>Results
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Admin Login
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
             </div>
         </div>

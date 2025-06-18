@@ -157,7 +157,7 @@ class SentimentAnalyzer:
         final_df.to_csv(summary_file, index=False)
         
         logging.info("💾 Stage 1 completed successfully")
-        return enriched_file  # Return primary output file for testing compatibility
+        return [enriched_file, summary_file]
 
     def run_stage2(self, output_dir):
         """Stage 2: Fetch and process EIPs Insight data"""
@@ -260,30 +260,21 @@ class SentimentAnalyzer:
         logging.info("🔗 Starting Stage 3: Final data merging...")
         
         try:
-            # Load all necessary files - check multiple possible file names
-            sentiment_files = [
-                os.path.join(output_dir, "unified_sentiment_summary.csv"),
-                os.path.join(output_dir, "aggregated_sentiment_with_eip_erc.csv")
-            ]
-            
-            sentiment_df = pd.DataFrame()
-            for sentiment_file in sentiment_files:
-                if os.path.exists(sentiment_file):
-                    sentiment_df = pd.read_csv(sentiment_file)
-                    break
-            
-            # Load EIP metadata - check multiple possible locations
+            # Load all necessary files
+            sentiment_file = os.path.join(output_dir, "unified_sentiment_summary.csv")
             eipsinsight_dir = os.path.join(output_dir, "eipsinsight_data")
-            metadata_files = [
-                os.path.join(eipsinsight_dir, "all_eips.csv"),
-                os.path.join(output_dir, "eips_data.csv")
-            ]
             
-            status_meta_df = pd.DataFrame()
-            for metadata_file in metadata_files:
-                if os.path.exists(metadata_file):
-                    status_meta_df = pd.read_csv(metadata_file)
-                    break
+            if os.path.exists(sentiment_file):
+                sentiment_df = pd.read_csv(sentiment_file)
+            else:
+                sentiment_df = pd.DataFrame()
+            
+            # Load EIP metadata
+            all_eips_file = os.path.join(eipsinsight_dir, "all_eips.csv")
+            if os.path.exists(all_eips_file):
+                status_meta_df = pd.read_csv(all_eips_file)
+            else:
+                status_meta_df = pd.DataFrame()
             
             # Process reviewer data if available
             reviewers_file = os.path.join(eipsinsight_dir, "reviewers_all.csv")
@@ -324,31 +315,10 @@ class SentimentAnalyzer:
                 except Exception as e:
                     logging.error(f"❌ Failed to process reviewer data: {e}")
             
-            # Merge all data - handle different column naming conventions
+            # Merge all data
             merged_df = sentiment_df.copy() if not sentiment_df.empty else pd.DataFrame()
             
-            # Standardize column names and data types for merging
-            if not merged_df.empty:
-                if 'eip_erc_numbers' in merged_df.columns and 'eip' not in merged_df.columns:
-                    merged_df['eip'] = pd.to_numeric(merged_df['eip_erc_numbers'], errors='coerce')
-                elif 'eip' in merged_df.columns:
-                    merged_df['eip'] = pd.to_numeric(merged_df['eip'], errors='coerce')
-                # Remove rows where eip conversion failed
-                merged_df = merged_df.dropna(subset=['eip'])
-                merged_df['eip'] = merged_df['eip'].astype(int)
-            
-            if not status_meta_df.empty:
-                if 'eip' in status_meta_df.columns:
-                    status_meta_df['eip'] = pd.to_numeric(status_meta_df['eip'], errors='coerce')
-                    status_meta_df = status_meta_df.dropna(subset=['eip'])
-                    status_meta_df['eip'] = status_meta_df['eip'].astype(int)
-            
-            if not review_counts.empty:
-                review_counts['eip'] = pd.to_numeric(review_counts['eip'], errors='coerce')
-                review_counts = review_counts.dropna(subset=['eip'])
-                review_counts['eip'] = review_counts['eip'].astype(int)
-            
-            if not status_meta_df.empty and not merged_df.empty and 'eip' in merged_df.columns:
+            if not status_meta_df.empty and not merged_df.empty:
                 merged_df = pd.merge(merged_df, status_meta_df, on="eip", how="outer")
             
             if not review_counts.empty and not merged_df.empty:
@@ -362,7 +332,7 @@ class SentimentAnalyzer:
                 # Clean up duplicate columns
                 columns_to_drop = [
                     'title_x', 'author_x', 'status_x',
-                    'status_conflict', 'status_y', '_id_y', 'deadline_x', 'requires_x',                                                        'discussion_x', 'toStatus', 'type_y', 'category', 'deadline_y',                                                            'discussion_y', 'requires_y', 'deadline_y', 'changeDate',  'changedDay',                                                   'changedMonth', 'changedYear', '__v_y', 'pr', 'category_x', 'category',                                                    '__v_x', 'category'
+                    'status_conflict', 'status_y', '_id_y', 'deadline_x', 'requires_x',                            'discussion_x', 'toStatus', 'type_y', 'category', 'deadline_y',                                'discussion_y', 'requires_y', 'deadline_y', 'changeDate',  'changedDay',                       'changedMonth', 'changedYear', '__v_y', 'pr', 'category_x', 'category',                        '__v_x', 'category'
                 ]
                 merged_df.drop(columns=[col for col in columns_to_drop if col in merged_df.columns], inplace=True)
             
@@ -371,9 +341,7 @@ class SentimentAnalyzer:
             if os.path.exists(transitions_file) and not merged_df.empty:
                 try:
                     transitions_df = pd.read_csv(transitions_file)
-                    transitions_df['eip'] = pd.to_numeric(transitions_df['eip'], errors='coerce')
-                    transitions_df = transitions_df.dropna(subset=['eip'])
-                    transitions_df['eip'] = transitions_df['eip'].astype(int)
+                    transitions_df['eip'] = pd.to_numeric(transitions_df['eip'], errors='coerce', downcast='integer')
                     transitions_df['changeDate'] = pd.to_datetime(transitions_df['changeDate'], errors='coerce')
                     
                     # Remove conflicting columns
@@ -389,25 +357,11 @@ class SentimentAnalyzer:
             # Save final merged file
             final_file = os.path.join(output_dir, "final_merged_analysis.csv")
             if not merged_df.empty:
-                # Ensure proper data types before saving
-                if 'eip' in merged_df.columns:
-                    merged_df['eip'] = merged_df['eip'].astype('Int64')  # Nullable integer
-                
-                # Clean up any remaining NaN values in numeric columns
-                numeric_columns = ['unified_compound', 'unified_pos', 'unified_neg', 'unified_neu', 'total_comment_count']
-                for col in numeric_columns:
-                    if col in merged_df.columns:
-                        merged_df[col] = pd.to_numeric(merged_df[col], errors='coerce')
-                
                 merged_df.to_csv(final_file, index=False)
                 logging.info(f"✅ Saved final merged analysis: {len(merged_df)} rows")
             else:
                 # Create empty file with headers
-                empty_df = pd.DataFrame(columns=[
-                    'eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu',
-                    'total_comment_count', 'category', 'status', 'title', 'author'
-                ])
-                empty_df.to_csv(final_file, index=False)
+                pd.DataFrame(columns=['eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu']).to_csv(final_file, index=False)
                 logging.warning("⚠️ No data to merge, created empty final file")
             
             # Create summary statistics
@@ -434,42 +388,14 @@ class SentimentAnalyzer:
                     output_files.append(filepath)
             
             logging.info("💾 Stage 3 completed successfully")
-            return final_file  # Return primary output file for testing compatibility
+            return output_files
             
         except Exception as e:
             logging.error(f"❌ Stage 3 failed: {e}")
-            # Create fallback final file using stage 1 data
-            final_file = os.path.join(output_dir, "final_merged_analysis.csv")
-            stage1_file = os.path.join(output_dir, "unified_sentiment_summary.csv")
-            
-            if os.path.exists(stage1_file):
-                try:
-                    stage1_df = pd.read_csv(stage1_file)
-                    # Standardize column names for dashboard compatibility
-                    if 'eip_erc_numbers' in stage1_df.columns:
-                        stage1_df['eip'] = stage1_df['eip_erc_numbers']
-                        stage1_df = stage1_df.drop('eip_erc_numbers', axis=1)
-                    
-                    # Add missing columns with default values
-                    if 'category' not in stage1_df.columns:
-                        stage1_df['category'] = 'Unknown'
-                    if 'status' not in stage1_df.columns:
-                        stage1_df['status'] = 'Unknown'
-                    if 'title' not in stage1_df.columns:
-                        stage1_df['title'] = None
-                    if 'author' not in stage1_df.columns:
-                        stage1_df['author'] = None
-                    
-                    stage1_df.to_csv(final_file, index=False)
-                    logging.info(f"✅ Created fallback final file from stage 1: {len(stage1_df)} rows")
-                    return [final_file]
-                except Exception as fallback_error:
-                    logging.error(f"Fallback creation failed: {fallback_error}")
-            
-            # Last resort: empty file with proper structure
-            empty_df = pd.DataFrame(columns=[
-                'eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu',
-                'total_comment_count', 'category', 'status', 'title', 'author'
-            ])
-            empty_df.to_csv(final_file, index=False)
-            return [final_file]
+            # Return at least the basic files that should exist
+            basic_files = []
+            for filename in ['unified_sentiment_summary.csv', 'enriched_sentiment_with_status.csv']:
+                filepath = os.path.join(output_dir, filename)
+                if os.path.exists(filepath):
+                    basic_files.append(filepath)
+            return basic_files

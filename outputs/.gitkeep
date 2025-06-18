@@ -1,1 +1,2 @@
-# Keep this directory in version control
+# This file keeps the outputs directory in git
+# Processed analysis results will be stored here organized by job ID
