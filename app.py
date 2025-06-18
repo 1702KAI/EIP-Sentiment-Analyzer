@@ -611,24 +611,33 @@ def generate_contract():
         contract_type = data.get('contract_type')
         custom_prompt = data.get('custom_prompt')
         
-        if not job_id or not eip_number or not contract_type:
-            return jsonify({'success': False, 'error': 'Missing required parameters'})
+        if not eip_number or not contract_type:
+            return jsonify({'success': False, 'error': 'EIP number and contract type are required'})
         
-        # Get EIP data from database
-        from models import EIPSentiment
-        eip_data_obj = EIPSentiment.query.filter_by(job_id=job_id, eip=eip_number).first()
+        # Try to get EIP data from database first
+        eip_data = None
+        if job_id:
+            from models import EIPSentiment
+            eip_data_obj = EIPSentiment.query.filter_by(job_id=job_id, eip=eip_number).first()
+            
+            if eip_data_obj:
+                eip_data = {
+                    'eip': eip_data_obj.eip,
+                    'title': eip_data_obj.title,
+                    'status': eip_data_obj.status,
+                    'category': eip_data_obj.category,
+                    'author': eip_data_obj.author
+                }
         
-        if not eip_data_obj:
-            return jsonify({'success': False, 'error': 'EIP not found in database'})
-        
-        # Convert to dictionary for the generator
-        eip_data = {
-            'eip': eip_data_obj.eip,
-            'title': eip_data_obj.title,
-            'status': eip_data_obj.status,
-            'category': eip_data_obj.category,
-            'author': eip_data_obj.author
-        }
+        # If no database data, create basic EIP data structure
+        if not eip_data:
+            eip_data = {
+                'eip': eip_number,
+                'title': f'EIP-{eip_number}',
+                'status': 'Unknown',
+                'category': 'ERC',
+                'author': 'Unknown'
+            }
         
         # Initialize code generator
         generator = EIPCodeGenerator()

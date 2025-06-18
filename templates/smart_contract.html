@@ -327,7 +327,14 @@ function loadJobData() {
     if (jobId) {
         window.location.href = `/smart-contract?job_id=${jobId}`;
     } else {
-        window.location.href = '/smart-contract';
+        // Switch to manual EIP input
+        document.getElementById('eipSelectContainer').innerHTML = `
+            <input type="number" class="form-control" id="eipInput" placeholder="Enter EIP number (e.g., 20, 721, 1155)" required min="1">
+            <div class="form-text">
+                Enter any EIP number to generate a smart contract implementation.
+            </div>
+        `;
+        document.getElementById('eipInfo').innerHTML = '<p class="text-muted">Enter an EIP number to generate a contract</p>';
     }
 }
 
@@ -359,11 +366,15 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
     e.preventDefault();
     
     const eipSelect = document.getElementById('eipSelect');
+    const eipInput = document.getElementById('eipInput');
     const contractType = document.getElementById('contractType').value;
     const customPrompt = document.getElementById('customPrompt').value;
     
-    if (!eipSelect.value || !contractType) {
-        alert('Please select both an EIP and contract type');
+    // Get EIP number from either select or input
+    const eipNumber = eipSelect ? eipSelect.value : (eipInput ? eipInput.value : '');
+    
+    if (!eipNumber || !contractType) {
+        alert('Please enter an EIP number and select a contract type');
         return;
     }
     
@@ -378,8 +389,8 @@ document.getElementById('contractForm')?.addEventListener('submit', async functi
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                job_id: document.getElementById('jobSelect').value,
-                eip_number: eipSelect.value,
+                job_id: document.getElementById('jobSelect').value || null,
+                eip_number: eipNumber,
                 contract_type: contractType,
                 custom_prompt: customPrompt
             })
