@@ -59,19 +59,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="eipSelect" class="form-label">Select EIP</label>
-                                    <select class="form-select" id="eipSelect" required>
-                                        <option value="">Choose an EIP...</option>
-                                        {% for eip in sentiment_data %}
-                                        <option value="{{ eip.eip }}" 
-                                                data-title="{{ eip.title or 'N/A' }}"
-                                                data-status="{{ eip.status or 'N/A' }}"
-                                                data-category="{{ eip.category or 'N/A' }}"
-                                                data-author="{{ eip.author or 'N/A' }}">
-                                            EIP-{{ eip.eip }}: {{ eip.title or 'Untitled' }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
+                                    <label for="eipInput" class="form-label">EIP Number</label>
+                                    <input type="number" class="form-control" id="eipInput" 
+                                           placeholder="Enter EIP number (e.g., 20, 721, 1155)" 
+                                           required min="1" max="9999">
+                                    <div class="form-text">
+                                        Enter any EIP number to generate a smart contract implementation.
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -120,7 +114,17 @@
                     <h5><i class="fas fa-info-circle me-2"></i>EIP Information</h5>
                 </div>
                 <div class="card-body" id="eipInfo">
-                    <p class="text-muted">Select an EIP to view details</p>
+                    <p class="text-muted">Enter an EIP number to generate a contract</p>
+                    <div class="mt-3">
+                        <h6>Popular EIPs:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='20'">EIP-20</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='721'">EIP-721</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='1155'">EIP-1155</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='2612'">EIP-2612</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('eipInput').value='4626'">EIP-4626</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -365,13 +369,12 @@ document.getElementById('eipSelect')?.addEventListener('change', function() {
 document.getElementById('contractForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const eipSelect = document.getElementById('eipSelect');
     const eipInput = document.getElementById('eipInput');
     const contractType = document.getElementById('contractType').value;
     const customPrompt = document.getElementById('customPrompt').value;
     
-    // Get EIP number from either select or input
-    const eipNumber = eipSelect ? eipSelect.value : (eipInput ? eipInput.value : '');
+    // Get EIP number from input
+    const eipNumber = eipInput ? eipInput.value : '';
     
     if (!eipNumber || !contractType) {
         alert('Please enter an EIP number and select a contract type');

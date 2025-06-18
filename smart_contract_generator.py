@@ -6,7 +6,10 @@ from openai import OpenAI
 class EIPCodeGenerator:
     def __init__(self):
         """Initialize the EIP code generator with OpenAI client"""
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
+        self.client = OpenAI(api_key=api_key, timeout=60.0)
         
     def generate_eip_implementation(self, eip_data, contract_type, custom_prompt=None):
         """
@@ -58,8 +61,9 @@ Make sure the contract is complete and deployable.
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=4000,
-                temperature=0.1  # Low temperature for consistent code generation
+                max_tokens=3000,
+                temperature=0.1,  # Low temperature for consistent code generation
+                timeout=60.0
             )
 
             generated_code = response.choices[0].message.content
@@ -117,7 +121,8 @@ Format the response as structured text with clear sections and severity levels.
                 model="gpt-4o",
                 messages=[{"role": "user", "content": analysis_prompt}],
                 max_tokens=2000,
-                temperature=0.2
+                temperature=0.2,
+                timeout=45.0
             )
 
             return {
