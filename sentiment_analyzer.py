@@ -327,16 +327,26 @@ class SentimentAnalyzer:
             # Merge all data - handle different column naming conventions
             merged_df = sentiment_df.copy() if not sentiment_df.empty else pd.DataFrame()
             
-            # Standardize column names for merging
+            # Standardize column names and data types for merging
             if not merged_df.empty:
                 if 'eip_erc_numbers' in merged_df.columns and 'eip' not in merged_df.columns:
-                    merged_df['eip'] = merged_df['eip_erc_numbers'].astype(str)
+                    merged_df['eip'] = pd.to_numeric(merged_df['eip_erc_numbers'], errors='coerce')
                 elif 'eip' in merged_df.columns:
-                    merged_df['eip'] = merged_df['eip'].astype(str)
+                    merged_df['eip'] = pd.to_numeric(merged_df['eip'], errors='coerce')
+                # Remove rows where eip conversion failed
+                merged_df = merged_df.dropna(subset=['eip'])
+                merged_df['eip'] = merged_df['eip'].astype(int)
             
             if not status_meta_df.empty:
                 if 'eip' in status_meta_df.columns:
-                    status_meta_df['eip'] = status_meta_df['eip'].astype(str)
+                    status_meta_df['eip'] = pd.to_numeric(status_meta_df['eip'], errors='coerce')
+                    status_meta_df = status_meta_df.dropna(subset=['eip'])
+                    status_meta_df['eip'] = status_meta_df['eip'].astype(int)
+            
+            if not review_counts.empty:
+                review_counts['eip'] = pd.to_numeric(review_counts['eip'], errors='coerce')
+                review_counts = review_counts.dropna(subset=['eip'])
+                review_counts['eip'] = review_counts['eip'].astype(int)
             
             if not status_meta_df.empty and not merged_df.empty and 'eip' in merged_df.columns:
                 merged_df = pd.merge(merged_df, status_meta_df, on="eip", how="outer")
@@ -361,7 +371,9 @@ class SentimentAnalyzer:
             if os.path.exists(transitions_file) and not merged_df.empty:
                 try:
                     transitions_df = pd.read_csv(transitions_file)
-                    transitions_df['eip'] = pd.to_numeric(transitions_df['eip'], errors='coerce', downcast='integer')
+                    transitions_df['eip'] = pd.to_numeric(transitions_df['eip'], errors='coerce')
+                    transitions_df = transitions_df.dropna(subset=['eip'])
+                    transitions_df['eip'] = transitions_df['eip'].astype(int)
                     transitions_df['changeDate'] = pd.to_datetime(transitions_df['changeDate'], errors='coerce')
                     
                     # Remove conflicting columns
@@ -377,11 +389,25 @@ class SentimentAnalyzer:
             # Save final merged file
             final_file = os.path.join(output_dir, "final_merged_analysis.csv")
             if not merged_df.empty:
+                # Ensure proper data types before saving
+                if 'eip' in merged_df.columns:
+                    merged_df['eip'] = merged_df['eip'].astype('Int64')  # Nullable integer
+                
+                # Clean up any remaining NaN values in numeric columns
+                numeric_columns = ['unified_compound', 'unified_pos', 'unified_neg', 'unified_neu', 'total_comment_count']
+                for col in numeric_columns:
+                    if col in merged_df.columns:
+                        merged_df[col] = pd.to_numeric(merged_df[col], errors='coerce')
+                
                 merged_df.to_csv(final_file, index=False)
                 logging.info(f"✅ Saved final merged analysis: {len(merged_df)} rows")
             else:
                 # Create empty file with headers
-                pd.DataFrame(columns=['eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu']).to_csv(final_file, index=False)
+                empty_df = pd.DataFrame(columns=[
+                    'eip', 'unified_compound', 'unified_pos', 'unified_neg', 'unified_neu',
+                    'total_comment_count', 'category', 'status', 'title', 'author'
+                ])
+                empty_df.to_csv(final_file, index=False)
                 logging.warning("⚠️ No data to merge, created empty final file")
             
             # Create summary statistics
