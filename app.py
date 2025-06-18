@@ -276,8 +276,12 @@ def login_post():
             db.session.commit()
         
         login_user(user)
-        flash('Logged in successfully!', 'success')
-        return redirect(url_for('upload_page'))
+        flash(f'Welcome back, {user.first_name}! Admin access granted.', 'success')
+        # Redirect to the page they were trying to access, or admin dashboard
+        next_page = request.args.get('next')
+        if next_page:
+            return redirect(next_page)
+        return redirect(url_for('admin_dashboard'))
     else:
         flash('Invalid email or password.', 'error')
         return redirect(url_for('login'))
@@ -288,6 +292,28 @@ def logout():
     logout_user()
     flash('Logged out successfully.', 'info')
     return redirect(url_for('index'))
+
+@app.route('/admin')
+@require_admin
+def admin_dashboard():
+    """Admin dashboard with quick access to all admin functions"""
+    from models import AnalysisJob, EIPSentiment
+    
+    # Get recent jobs and statistics
+    recent_jobs = AnalysisJob.query.order_by(AnalysisJob.created_at.desc()).limit(5).all()
+    total_jobs = AnalysisJob.query.count()
+    completed_jobs = AnalysisJob.query.filter_by(status='completed').count()
+    total_eips_analyzed = EIPSentiment.query.count()
+    
+    stats = {
+        'total_jobs': total_jobs,
+        'completed_jobs': completed_jobs,
+        'failed_jobs': AnalysisJob.query.filter_by(status='failed').count(),
+        'processing_jobs': AnalysisJob.query.filter_by(status='processing').count(),
+        'total_eips_analyzed': total_eips_analyzed
+    }
+    
+    return render_template('admin_dashboard.html', recent_jobs=recent_jobs, stats=stats)
 
 @app.route('/upload')
 @require_admin
