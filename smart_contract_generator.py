@@ -1,12 +1,29 @@
 import os
 import json
 import logging
+import time
 from openai import OpenAI
 
 class EIPCodeGenerator:
     def __init__(self):
         """Initialize the EIP code generator with OpenAI client"""
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = OpenAI(
+            api_key=os.environ.get("OPENAI_API_KEY"),
+            timeout=60.0  # 60 second timeout
+        )
+    
+    def _make_openai_request(self, **kwargs):
+        """Make OpenAI request with retry logic"""
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(**kwargs)
+                return response
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                logging.warning(f"OpenAI request failed (attempt {attempt + 1}): {str(e)}")
+                time.sleep(2 ** attempt)  # Exponential backoff
         
     def generate_eip_implementation(self, eip_data, contract_type, custom_prompt=None):
         """
@@ -52,14 +69,14 @@ Make sure the contract is complete and deployable.
 
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
-            response = self.client.chat.completions.create(
+            response = self._make_openai_request(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
                 max_tokens=4000,
-                temperature=0.1  # Low temperature for consistent code generation
+                temperature=0.1
             )
 
             generated_code = response.choices[0].message.content
@@ -105,7 +122,7 @@ Format the response as structured text with clear sections and severity levels.
 
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
-            response = self.client.chat.completions.create(
+            response = self._make_openai_request(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": analysis_prompt}],
                 max_tokens=2000,
@@ -152,7 +169,7 @@ Format as complete JavaScript test files ready to run with Hardhat.
 
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
-            response = self.client.chat.completions.create(
+            response = self._make_openai_request(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": test_prompt}],
                 max_tokens=3000,
@@ -214,7 +231,7 @@ Focus on EIPs that are actually implemented or could be implemented by this code
 
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
-            response = self.client.chat.completions.create(
+            response = self._make_openai_request(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": analysis_prompt}],
                 max_tokens=2000,
@@ -226,7 +243,12 @@ Focus on EIPs that are actually implemented or could be implemented by this code
             content = response.choices[0].message.content or ""
             if not content.strip():
                 return {"success": False, "error": "Empty response from AI"}
-            recommendations = json.loads(content)
+            
+            try:
+                recommendations = json.loads(content)
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON parsing error: {e}, Content: {content}")
+                return {"success": False, "error": f"Invalid JSON response: {str(e)}"}
             
             # Also get general analysis
             general_analysis = self.analyze_contract_security(contract_code)
