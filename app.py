@@ -7,9 +7,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.utils import secure_filename
-import pandas as pd
-from sentiment_analyzer import SentimentAnalyzer
-from smart_contract_generator import EIPCodeGenerator
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -100,6 +97,10 @@ def process_csv_background(job_id, filepath, output_dir):
     """Background task to process CSV file through sentiment analysis pipeline"""
     
     try:
+        # Import heavy dependencies only when needed
+        import pandas as pd
+        from sentiment_analyzer import SentimentAnalyzer
+        
         with app.app_context():
             # Update job status to processing
             job = AnalysisJob.query.get(job_id)
@@ -568,6 +569,7 @@ def generate_contract():
         
         # Initialize code generator
         try:
+            from smart_contract_generator import EIPCodeGenerator
             generator = EIPCodeGenerator()
             
             # Generate the contract
