@@ -545,7 +545,7 @@ def generate_contract():
         # Try to get EIP data from database first
         eip_data = None
         if job_id:
-            from models import EIPSentiment
+            # EIPSentiment is already defined in this file
             eip_data_obj = EIPSentiment.query.filter_by(job_id=job_id, eip=eip_number).first()
             
             if eip_data_obj:
