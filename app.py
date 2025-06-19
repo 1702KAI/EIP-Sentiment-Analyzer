@@ -418,17 +418,31 @@ def dashboard():
             valid_scores = [s.unified_compound for s in sentiment_data if s.unified_compound is not None]
             
             if valid_scores:
-                import numpy as np
-                # Create bins for histogram
-                bins = np.linspace(-1, 1, 11)  # 10 bins from -1 to 1
-                hist, bin_edges = np.histogram(valid_scores, bins=bins)
-                
-                # Create bin labels
-                sentiment_bins = []
-                for i in range(len(bin_edges)-1):
-                    sentiment_bins.append(f"{bin_edges[i]:.1f} to {bin_edges[i+1]:.1f}")
-                
-                sentiment_hist = hist.tolist()
+                try:
+                    import numpy as np
+                    # Create bins for histogram
+                    bins = np.linspace(-1, 1, 11)  # 10 bins from -1 to 1
+                    hist, bin_edges = np.histogram(valid_scores, bins=bins)
+                    
+                    # Create bin labels
+                    sentiment_bins = []
+                    for i in range(len(bin_edges)-1):
+                        sentiment_bins.append(f"{bin_edges[i]:.1f} to {bin_edges[i+1]:.1f}")
+                    
+                    sentiment_hist = hist.tolist()
+                except (ImportError, Exception) as e:
+                    # Fallback to manual binning if numpy is not available
+                    logging.warning(f"NumPy error: {str(e)}, using manual histogram calculation")
+                    bin_size = 0.2
+                    bins_dict = {}
+                    for score in valid_scores:
+                        bin_index = int((score + 1) / bin_size)
+                        bin_index = min(max(bin_index, 0), 9)  # Clamp to 0-9
+                        bin_key = f"{-1 + bin_index * bin_size:.1f} to {-1 + (bin_index + 1) * bin_size:.1f}"
+                        bins_dict[bin_key] = bins_dict.get(bin_key, 0) + 1
+                    
+                    sentiment_bins = list(bins_dict.keys())
+                    sentiment_hist = list(bins_dict.values())
             else:
                 sentiment_bins = []
                 sentiment_hist = []
