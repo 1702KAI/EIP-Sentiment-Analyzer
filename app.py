@@ -599,6 +599,7 @@ def analyze_security():
             return jsonify({'success': False, 'error': 'Contract code is required'})
         
         # Initialize code generator
+        from smart_contract_generator import EIPCodeGenerator
         generator = EIPCodeGenerator()
         
         # Analyze security
@@ -622,6 +623,7 @@ def generate_tests():
             return jsonify({'success': False, 'error': 'Contract code is required'})
         
         # Initialize code generator
+        from smart_contract_generator import EIPCodeGenerator
         generator = EIPCodeGenerator()
         
         # Generate tests
@@ -667,6 +669,7 @@ def analyze_code_and_recommend():
             return jsonify({'success': False, 'error': 'No EIP data found for the selected job'})
         
         # Initialize code generator
+        from smart_contract_generator import EIPCodeGenerator
         generator = EIPCodeGenerator()
         
         # Analyze code and get EIP recommendations
