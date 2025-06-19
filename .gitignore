@@ -16,6 +16,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -43,62 +44,8 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Virtual environments
 .env
 .venv
 env/
@@ -107,46 +54,24 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# Flask
+instance/
+.webassets-cache
 
-# Rope project settings
-.ropeproject
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
 
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
+# IDE
+.vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Project specific
-uploads/
-outputs/
-*.csv
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-logs/
-
-# OS generated files
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -155,44 +80,52 @@ logs/
 ehthumbs.db
 Thumbs.db
 
-# Editor files
-*.swp
-*.swo
-*~
-.vscode/
-*.sublime-project
-*.sublime-workspace
+# Project specific
+uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
+screenshots/*
+!screenshots/.gitkeep
+*.log
+*.pid
 
-# Node modules (if any)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Temporary files
-*.tmp
-*.temp
+# Development and testing files
+attached_assets/
+test_output/
 temp/
 tmp/
 
-# Screenshots and attachments (project specific)
-attached_assets/
-screenshots/
+# Documentation build
+docs/_build/
+docs/build/
 
-# Secret files
-secrets.json
-.secrets
-config.ini
-
-# Database files
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
+# Replit specific
+.replit
+.breakpoints
+replit.nix
+
 # Backup files
 *.bak
 *.backup
+*.orig
 
-# UV/pip files
-uv.lock
-pip-wheel-metadata/
+# Generated files
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+!static/images/*
+
+# Lock files (keep uv.lock for dependency management)
+# uv.lock is kept for reproducible builds
+
+# Temporary files
+*.tmp
+*.temp

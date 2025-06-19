@@ -1,4 +1,3 @@
-// Main JavaScript functionality for EIP Sentiment Analyzer
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
@@ -159,7 +158,6 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Add smooth scrolling to anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -182,7 +180,6 @@ document.querySelectorAll('form').forEach(form => {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
             submitBtn.disabled = true;
             
-            // Re-enable button after 30 seconds as fallback
             setTimeout(() => {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
